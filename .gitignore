@@ -3,6 +3,18 @@
 
 # Log file
 *.log
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+
+# IDE files
+.vscode/
+.idea/
 
 # BlueJ files
 *.ctxt
