@@ -62,6 +62,9 @@ public class Simulation {
 
             // Aca deberia recalcular las fuerzas y la aceleracion
             // calculateForces()  --> Deberia usar la lista de vecinos para calcular la fuerza de interaccion 
+            // Deberia verificar tambien en el calculo de las fuerzas interactuantes que en efecto cumpla el radio de interaccion
+            // porque algunos podrian no, pero por defecto hay que tomar el maximo posible (asi todas las interacciones figuran)
+            // y luego se filtra por las que no
 
             integrator.correct(peatones, DT);
 
