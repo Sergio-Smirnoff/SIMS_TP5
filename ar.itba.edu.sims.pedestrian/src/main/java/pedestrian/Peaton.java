@@ -1,4 +1,6 @@
 package pedestrian;
+import java.util.Objects;
+
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 public class Peaton {
@@ -56,6 +58,6 @@ public class Peaton {
 
     @Override
     public int hashCode() {
-        return id;
+        return Objects.hash(id, radius, mass, position, velocity, currentAcceleration, previousAcceleration, hasLeft);
     }
 }
