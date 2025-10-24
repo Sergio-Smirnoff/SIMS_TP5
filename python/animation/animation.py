@@ -1,4 +1,4 @@
-import output_reader as outreader
+import python.output_reader as outreader
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
