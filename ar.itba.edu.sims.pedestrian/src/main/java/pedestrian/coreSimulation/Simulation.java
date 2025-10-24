@@ -154,8 +154,8 @@ public class Simulation {
 
     private void printHeaders(){
         try {
-            this.TIME_WRITER.write(String.format("N=%d\nL=%d\n", N_PEATONES, Math.round(L)));
-            this.SIMULATION_WRITER.write(String.format("N=%d\nL=%d\n", N_PEATONES, Math.round(L)));
+            this.TIME_WRITER.write(String.format("N=%d\nL=%d\n", N_PEATONES + 1, Math.round(L)));
+            this.SIMULATION_WRITER.write(String.format("N=%d\nL=%d\n", N_PEATONES + 1, Math.round(L)));
 
             this.SIMULATION_WRITER.flush();
             this.TIME_WRITER.flush();
