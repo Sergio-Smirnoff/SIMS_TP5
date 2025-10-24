@@ -83,8 +83,8 @@ public class Peaton {
      * @return Vector2D with self driven force
      */
     public Vector2D calculateSelfDrivenForce(){
-        Vector2D toReturn = desiredVelocity.subtract(velocity);      // (v_d e_i - v_i)
-        toReturn.scalarMultiply(mass).scalarMultiply(1.0/characteristicTime);            // m_i (v_d e_i - v_i) (1/†)
+        Vector2D toReturn = desiredVelocity.subtract(velocity);                             // (v_d e_i - v_i)
+        toReturn = toReturn.scalarMultiply(mass).scalarMultiply(1.0/characteristicTime);            // m_i (v_d e_i - v_i) (1/†)
         return toReturn;
     }
 
@@ -99,12 +99,12 @@ public class Peaton {
 
         if(overlapping > 0){
             // points from other to this
-            Vector2D normalVersor = position.subtract(other.position).scalarMultiply(CMDistance);       // n_hat
-            Vector2D tangentialVersor = new Vector2D(-normalVersor.getX(), normalVersor.getY());        // t_hat
-            double deltaVelocity = other.velocity.subtract(this.velocity).dotProduct(tangentialVersor); // (v_other - v_this) * t_hat
+            Vector2D normalVersor = this.position.subtract(other.position).scalarMultiply(1.0/CMDistance);        // n_hat
+            Vector2D tangentialVersor = new Vector2D(-normalVersor.getY(), normalVersor.getX());                // t_hat
+            double deltaVelocity = other.velocity.subtract(this.velocity).dotProduct(tangentialVersor);         // (v_other - v_this) * t_hat
 
-            Vector2D frictionForce = tangentialVersor.scalarMultiply(deltaVelocity).scalarMultiply(Kt); // kt * dV * t_hat
-            Vector2D elasticForce = normalVersor.scalarMultiply(Kn);                                    // kn * n_hat
+            Vector2D frictionForce = tangentialVersor.scalarMultiply(deltaVelocity).scalarMultiply(Kt);         // kt * dV * t_hat
+            Vector2D elasticForce = normalVersor.scalarMultiply(Kn);                                            // kn * n_hat
 
             toReturn = toReturn.add(frictionForce).add(elasticForce).scalarMultiply(overlapping);       // g(rij - dij) * [kn * n_hat + kt * dV * t_hat]
 
