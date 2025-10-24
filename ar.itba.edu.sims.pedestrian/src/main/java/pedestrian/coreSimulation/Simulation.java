@@ -1,5 +1,7 @@
 package pedestrian.coreSimulation;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,6 +22,9 @@ public class Simulation {
     private static final double RC_INTERACTION = R_MAX_MOVIL + R_FIJO;
     private static final int ID_AGENTE_CENTRAL = 0;
 
+    private FileWriter SIMULATION_WRITER;
+    private FileWriter TIME_WRITER;
+
     // sim params por ahora son inventados :)
     private static final int N_PEATONES = 200;
     private static final double MASS = 70.0;
@@ -31,6 +36,8 @@ public class Simulation {
     private double time = 0.0;
 
     private List<Peaton> peatones;
+    private List<Double> colls;
+
     private Peaton agenteCentral;
     private CellIndexMethod cim;
     private final Random random;
@@ -43,6 +50,13 @@ public class Simulation {
             initializeParticles();
             this.integrator = new Beeman();
             this.cim = new CellIndexMethod(L, RC_INTERACTION);
+            this.colls = new ArrayList<>();
+        try {
+            this.SIMULATION_WRITER = new FileWriter("simulation.csv");
+            this.TIME_WRITER = new FileWriter("times.csv");
+        } catch (IOException ex) {
+            throw new Error("Bryat");
+        }
     }
 
     private void calculateForces(Peaton p, List<Peaton> neighbors){
@@ -50,7 +64,7 @@ public class Simulation {
         for(Peaton other: neighbors){
             double distance = CellIndexMethod.calculatePeriodicDistance(p.getPosition(), other.getPosition(), L);
             if(cim.insideRC(distance)){
-                Vector2D force = p.calculateForce(other, distance, ID_AGENTE_CENTRAL, time);
+                Vector2D force = p.calculateForce(other, distance, ID_AGENTE_CENTRAL, time, colls);
                 p.addToResultantForce(force);
             }
         }
@@ -67,13 +81,12 @@ public class Simulation {
     }
 
     public void runSimulation() {
-        double nextOutputTime = 0.0;
-        int step = 0;
-
         prepareSimulation();
 
+        printHeaders();
+        
         while(time < TOTAL_TIME) {
-
+            printSimulation(peatones, time);
             // prediccion inicial
             integrator.predict(peatones, DT, L); 
 
@@ -87,8 +100,8 @@ public class Simulation {
             integrator.correct(peatones, DT);
 
             time += DT;
-            step++;
         }
+        printTimes();
     }
 
 
@@ -138,4 +151,34 @@ public class Simulation {
     }
     // ----------- End: Initialize particles --------------
 
+    private void printHeaders(){
+        try {
+            this.TIME_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
+            this.SIMULATION_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
+        } catch (IOException e) {
+            throw new Error("Bryat 2");
+        }
+    }
+
+    private void printTimes(){
+        try {
+            this.TIME_WRITER.write("t\n");
+            for(Double c : this.colls)
+                this.TIME_WRITER.write(String.format("%.15f\n", c));
+            
+        } catch (IOException e) {
+            throw new Error("Bryat 3");
+        }
+    }
+
+    private void printSimulation(List<Peaton> peatons, double currentTime){
+        try {
+            this.SIMULATION_WRITER.write(String.format("t=%.3f\n", currentTime));
+            this.SIMULATION_WRITER.write("id;x;y;r\n");
+            for(Peaton p : peatons)
+                this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius()));
+        } catch (IOException e) {
+            throw new Error("Bryat 4");
+        }
+    }
 }

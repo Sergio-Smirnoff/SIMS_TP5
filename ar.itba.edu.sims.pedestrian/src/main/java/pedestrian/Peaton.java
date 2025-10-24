@@ -1,4 +1,5 @@
 package pedestrian;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
@@ -52,7 +53,8 @@ public class Peaton {
     public Vector2D getvelocity() { return velocity; }
     public Vector2D getcurrentAcceleration() { return currentAcceleration; }
     public Vector2D getpreviousAcceleration() { return previousAcceleration; }
-    
+    public double getColissionTime() { return collisionTime; }
+
     public void setPosition(Vector2D nuevaposition) { this.position = nuevaposition; }
     public void setVelocity(Vector2D nuevavelocity) { this.velocity = nuevavelocity; }
     
@@ -87,12 +89,12 @@ public class Peaton {
     }
 
     // todo: returns 1 when argument is positive?
-    private int GFunction(double argument){
-        return argument > 0 ? 1 : 0;
+    private double GFunction(double argument){
+        return argument > 0 ? argument : 0;
     }
 
     // todo acá podría hacer el chequeo con la partícula central?
-    private Vector2D calculateForceAgainstParticle(Peaton other, double CMDistance, int idAC, double time){
+    private Vector2D calculateForceAgainstParticle(Peaton other, double CMDistance, int idAC, double time, List<Double> colls){
         Vector2D toReturn = Vector2D.ZERO;
         double rij = this.radius + other.radius;
         double overlapping = GFunction(rij - CMDistance);
@@ -110,15 +112,16 @@ public class Peaton {
 
             if(collisionTime == null && other.id == idAC){
                 collisionTime = time;
+                colls.add(time);
             }
         }
 
         return toReturn;
     }
 
-    public Vector2D calculateForce(Peaton other, double CMDistance, int idAC, double time){
+    public Vector2D calculateForce(Peaton other, double CMDistance, int idAC, double time, List<Double> colls){
         return Vector2D.ZERO.add(calculateSelfDrivenForce())
-                    .add(calculateForceAgainstParticle(other, CMDistance, idAC, time));
+                    .add(calculateForceAgainstParticle(other, CMDistance, idAC, time, colls));
     }
 
     public void resetResultantForce(){
