@@ -82,19 +82,17 @@ public class Peaton {
      * Calculates self driven force for 'this' particle
      * @return Vector2D with self driven force
      */
-    private Vector2D calculateSelfDrivenForce(){
+    public Vector2D calculateSelfDrivenForce(){
         Vector2D toReturn = desiredVelocity.subtract(velocity);      // (v_d e_i - v_i)
         toReturn.scalarMultiply(mass).scalarMultiply(1.0/characteristicTime);            // m_i (v_d e_i - v_i) (1/†)
         return toReturn;
     }
 
-    // todo: returns 1 when argument is positive?
     private double GFunction(double argument){
         return argument > 0 ? argument : 0;
     }
 
-    // todo acá podría hacer el chequeo con la partícula central?
-    private Vector2D calculateForceAgainstParticle(Peaton other, double CMDistance, int idAC, double time, List<Double> colls){
+    public Vector2D calculateForceAgainstParticle(Peaton other, double CMDistance, int idAC, double time, List<Double> colls){
         Vector2D toReturn = Vector2D.ZERO;
         double rij = this.radius + other.radius;
         double overlapping = GFunction(rij - CMDistance);
@@ -117,11 +115,6 @@ public class Peaton {
         }
 
         return toReturn;
-    }
-
-    public Vector2D calculateForce(Peaton other, double CMDistance, int idAC, double time, List<Double> colls){
-        return Vector2D.ZERO.add(calculateSelfDrivenForce())
-                    .add(calculateForceAgainstParticle(other, CMDistance, idAC, time, colls));
     }
 
     public void resetResultantForce(){

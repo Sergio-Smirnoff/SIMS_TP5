@@ -64,10 +64,12 @@ public class Simulation {
         for(Peaton other: neighbors){
             double distance = CellIndexMethod.calculatePeriodicDistance(p.getPosition(), other.getPosition(), L);
             if(cim.insideRC(distance)){
-                Vector2D force = p.calculateForce(other, distance, ID_AGENTE_CENTRAL, time, colls);
+                Vector2D force = p.calculateForceAgainstParticle(other, distance, ID_AGENTE_CENTRAL, time, colls);
                 p.addToResultantForce(force);
             }
         }
+        Vector2D selfDrivenForce = p.calculateSelfDrivenForce();
+        p.addToResultantForce(selfDrivenForce);
     }
 
     private void prepareSimulation(){
