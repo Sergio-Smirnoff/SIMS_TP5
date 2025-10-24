@@ -178,6 +178,7 @@ public class Simulation {
         try {
             this.SIMULATION_WRITER.write(String.format("t=%.3f\n", currentTime));
             this.SIMULATION_WRITER.write("id;x;y;r\n");
+            this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", this.agenteCentral.getId(), this.agenteCentral.getPosition().getX(), this.agenteCentral.getPosition().getY(), this.agenteCentral.getRadius()));
             for(Peaton p : peatons)
                 this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius()));
             
