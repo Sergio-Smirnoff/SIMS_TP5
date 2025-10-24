@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
+import org.apache.commons.math3.util.Precision;
 import pedestrian.Peaton;
 
 public class CellIndexMethod {
@@ -113,5 +114,9 @@ public class CellIndexMethod {
         dy = Math.min(dy, L - dy);
         
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    public boolean insideRC(double distance){
+        return Double.compare(distance, rc) <= 0;
     }
 }
