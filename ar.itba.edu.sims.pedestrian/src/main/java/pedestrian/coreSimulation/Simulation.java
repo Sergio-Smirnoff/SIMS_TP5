@@ -26,7 +26,7 @@ public class Simulation {
     private FileWriter TIME_WRITER;
 
     // sim params por ahora son inventados :)
-    private static final int N_PEATONES = 200;
+    private static final int N_PEATONES = 4;
     private static final double MASS = 70.0;
     private static final double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
@@ -109,7 +109,6 @@ public class Simulation {
     private void initializeParticles() {
         peatones = new ArrayList<>();
         int id = 1;
-        
         while (peatones.size() < N_PEATONES) {
             double radius = R_MIN_MOVIL + (R_MAX_MOVIL - R_MIN_MOVIL) * random.nextDouble();
             
@@ -155,6 +154,9 @@ public class Simulation {
         try {
             this.TIME_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
             this.SIMULATION_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
+
+            this.SIMULATION_WRITER.flush();
+            this.TIME_WRITER.flush();
         } catch (IOException e) {
             throw new Error("Bryat 2");
         }
@@ -166,6 +168,7 @@ public class Simulation {
             for(Double c : this.colls)
                 this.TIME_WRITER.write(String.format("%.15f\n", c));
             
+            this.TIME_WRITER.flush();
         } catch (IOException e) {
             throw new Error("Bryat 3");
         }
@@ -177,6 +180,8 @@ public class Simulation {
             this.SIMULATION_WRITER.write("id;x;y;r\n");
             for(Peaton p : peatons)
                 this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius()));
+            
+            this.SIMULATION_WRITER.flush();
         } catch (IOException e) {
             throw new Error("Bryat 4");
         }
