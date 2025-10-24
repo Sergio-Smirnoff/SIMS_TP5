@@ -31,7 +31,7 @@ public class Simulation {
     private static final double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
     private static final double DT = 0.001;
-    private static final double TOTAL_TIME = 100.0;
+    private static final double TOTAL_TIME = 1.0;
     private static final double OUTPUT_DT = 0.1;
     private double time = 0.0;
 
