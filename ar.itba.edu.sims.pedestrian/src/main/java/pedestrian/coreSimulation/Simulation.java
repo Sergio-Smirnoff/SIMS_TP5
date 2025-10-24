@@ -1,5 +1,7 @@
 package pedestrian.coreSimulation;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -18,15 +20,24 @@ public class Simulation {
     private static final double R_MAX_MOVIL = 0.21;
     private static final double R_FIJO = 0.21;
     private static final double RC_INTERACTION = R_MAX_MOVIL + R_FIJO;
+    private static final int ID_AGENTE_CENTRAL = 0;
+
+    private FileWriter SIMULATION_WRITER;
+    private FileWriter TIME_WRITER;
 
     // sim params por ahora son inventados :)
-    private static final int N_PEATONES = 200;
+    private static final int N_PEATONES = 4;
     private static final double MASS = 70.0;
+    private static final double DESIRED_VELOCITY = 1.7;
+    private static final double CHARACTERISTIC_TIME = 0.5;
     private static final double DT = 0.001;
-    private static final double TOTAL_TIME = 100.0;
+    private static final double TOTAL_TIME = 1.0;
     private static final double OUTPUT_DT = 0.1;
+    private double time = 0.0;
 
     private List<Peaton> peatones;
+    private List<Double> colls;
+
     private Peaton agenteCentral;
     private CellIndexMethod cim;
     private final Random random;
@@ -35,42 +46,62 @@ public class Simulation {
     // Fijo al agente del medio, inicializa las particulas y crea el cell idx
     public Simulation() {
             this.random = new Random();
-            this.agenteCentral = new Peaton(N_PEATONES + 1, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
+            this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
             initializeParticles();
             this.integrator = new Beeman();
             this.cim = new CellIndexMethod(L, RC_INTERACTION);
+            this.colls = new ArrayList<>();
+        try {
+            this.SIMULATION_WRITER = new FileWriter("simulation.csv");
+            this.TIME_WRITER = new FileWriter("times.csv");
+        } catch (IOException ex) {
+            throw new Error("Bryat");
+        }
+    }
+
+    private void calculateForces(Peaton p, List<Peaton> neighbors){
+        p.resetResultantForce();
+        for(Peaton other: neighbors){
+            double distance = CellIndexMethod.calculatePeriodicDistance(p.getPosition(), other.getPosition(), L);
+            if(cim.insideRC(distance)){
+                Vector2D force = p.calculateForce(other, distance, ID_AGENTE_CENTRAL, time, colls);
+                p.addToResultantForce(force);
+            }
+        }
+    }
+
+    private void prepareSimulation(){
+        for(Peaton p: peatones){
+            List<Peaton> neighbors = cim.getNeighbors(p, agenteCentral);
+            calculateForces(p, neighbors);
+            Vector2D acceleration = p.calculateAcceleration();
+            p.setPreviousAcceleration(acceleration);
+            p.setCurrentAcceleration(acceleration);
+        }
     }
 
     public void runSimulation() {
-        double time = 0.0;
-        double nextOutputTime = 0.0;
-        int step = 0;
+        prepareSimulation();
 
-        // Calcular fuerzas o aceleraciones iniciales
-
-        // calculateForces()  o algo asi deberia ser
-        // inicialmente las fuerzas de interaccion van a ser 0 creo, al menos entre las particulas
-        // de todos modos el calculate forces deberia llamar al getneighbours
-
+        printHeaders();
+        
         while(time < TOTAL_TIME) {
-            // Aca podriamos imprimir un snapshot del estado
-
+            printSimulation(peatones, time);
             // prediccion inicial
             integrator.predict(peatones, DT, L); 
 
             cim.buildGrid(peatones);
 
-            // Aca deberia recalcular las fuerzas y la aceleracion
-            // calculateForces()  --> Deberia usar la lista de vecinos para calcular la fuerza de interaccion 
-            // Deberia verificar tambien en el calculo de las fuerzas interactuantes que en efecto cumpla el radio de interaccion
-            // porque algunos podrian no, pero por defecto hay que tomar el maximo posible (asi todas las interacciones figuran)
-            // y luego se filtra por las que no
+            for(Peaton p: peatones){
+                List<Peaton> neighbors = cim.getNeighbors(p, agenteCentral);
+                calculateForces(p, neighbors);
+            }
 
             integrator.correct(peatones, DT);
 
             time += DT;
-            step++;
         }
+        printTimes();
     }
 
 
@@ -78,7 +109,6 @@ public class Simulation {
     private void initializeParticles() {
         peatones = new ArrayList<>();
         int id = 1;
-        
         while (peatones.size() < N_PEATONES) {
             double radius = R_MIN_MOVIL + (R_MAX_MOVIL - R_MIN_MOVIL) * random.nextDouble();
             
@@ -86,7 +116,12 @@ public class Simulation {
             double y = L * random.nextDouble();
             Vector2D position = new Vector2D(x, y);
 
-            Peaton newPeaton = new Peaton(id, position, radius, MASS);
+            double phi = 2*Math.PI*random.nextDouble();
+            double vx = DESIRED_VELOCITY * Math.cos(phi);
+            double vy = DESIRED_VELOCITY * Math.sin(phi);
+            Vector2D desiredVelocity = new Vector2D(vx, vy);
+
+            Peaton newPeaton = new Peaton(id, position, desiredVelocity, radius, MASS, CHARACTERISTIC_TIME);
             
             boolean overlaps = false;
             
@@ -115,4 +150,41 @@ public class Simulation {
     }
     // ----------- End: Initialize particles --------------
 
+    private void printHeaders(){
+        try {
+            this.TIME_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
+            this.SIMULATION_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
+
+            this.SIMULATION_WRITER.flush();
+            this.TIME_WRITER.flush();
+        } catch (IOException e) {
+            throw new Error("Bryat 2");
+        }
+    }
+
+    private void printTimes(){
+        try {
+            this.TIME_WRITER.write("t\n");
+            for(Double c : this.colls)
+                this.TIME_WRITER.write(String.format("%.15f\n", c));
+            
+            this.TIME_WRITER.flush();
+        } catch (IOException e) {
+            throw new Error("Bryat 3");
+        }
+    }
+
+    private void printSimulation(List<Peaton> peatons, double currentTime){
+        try {
+            this.SIMULATION_WRITER.write(String.format("t=%.3f\n", currentTime));
+            this.SIMULATION_WRITER.write("id;x;y;r\n");
+            this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", this.agenteCentral.getId(), this.agenteCentral.getPosition().getX(), this.agenteCentral.getPosition().getY(), this.agenteCentral.getRadius()));
+            for(Peaton p : peatons)
+                this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius()));
+            
+            this.SIMULATION_WRITER.flush();
+        } catch (IOException e) {
+            throw new Error("Bryat 4");
+        }
+    }
 }
