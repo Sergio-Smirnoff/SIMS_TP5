@@ -38,7 +38,10 @@ class FileReader:
         for line in flines:
             key, value = line.strip().split('=')
             if key in self.parameters:
-                self.parameters[key] = int(value)
+                if key == "N":
+                    self.parameters[key] = int(value)
+                else:
+                    self.parameters[key] = float(value)
 
         return self.parameters
     

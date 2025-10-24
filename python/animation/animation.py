@@ -1,20 +1,28 @@
-import python.output_reader as outreader
+
+import sys
+from pathlib import Path
+
+root_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(root_dir))
+
+from output_reader import FileReader
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import sys
 import datetime
+import os
 import logging as log
 
-log.basicConfig(level=log.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+log.basicConfig(level=log.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def create_animation(file_path: str, save_animation: bool = False):
     """
     Crea una animación de las partículas
     """
     log.info(f"Reading simulation output from: {file_path}\n")
-    reader = outreader.FileReader(file_path)
+    reader = FileReader(file_path)
     
     N = reader.parameters["N"]
     L = reader.parameters["L"]
@@ -127,6 +135,7 @@ def main(file_path: str, save_animation: bool = False):
     fig, anim, reader = create_animation(file_path, save_animation)
     
     if save_animation:
+        os.makedirs("output", exist_ok=True)
         output_file = f"output/animation_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
         log.info(f"Saving animation to {output_file}")
         anim.save(output_file, writer='ffmpeg', fps=10, dpi=100)
@@ -142,6 +151,7 @@ if __name__ == "__main__":
     base_path = "data/"
     
     if len(sys.argv) > 1:
+        log.debug(f"Command-line argument for file path detected: {sys.argv[1]}")
         file_path = base_path + sys.argv[1]
     else:
         file_path = base_path + 'output_test.txt'
