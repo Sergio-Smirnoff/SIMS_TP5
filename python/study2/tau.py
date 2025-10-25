@@ -7,6 +7,7 @@ sys.path.insert(0, str(root_dir))
 import logging as log
 import pandas as pd
 import numpy as np
+import ast
 from output_reader import FileReader
 
 log.basicConfig(
@@ -14,26 +15,48 @@ log.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def read_times_data(file_path: str):
+INPUT_FILE = "output/study1/data/phi_times_values.txt"
+OUTPUT_FILE_DIR = "output/study2/data/"
+OUTPUT_GRAPH_DIR = "output/study2/graphs/"
+
+
+def read_times_data() -> pd.DataFrame:
     """
     Reads time data from the simulation output file
     Returns a dictionary with particle ids as keys and their corresponding time lists as values
     """
-    reader = FileReader(file_path)
-    times = reader.read_times()
-    reader.close_file()
+    log.info(f"Reading times data from: {INPUT_FILE}\n")
 
-    times_data = times['t'].tolist()
-    tau_data = np.array([])
+    df = pd.read_csv(INPUT_FILE, sep=';')
 
-    for index, time in enumerate(times_data):
-        log.debug(f"Time {index}: {time}")
-        if index+1 > len(times_data)-1:
-            break
-        tau = times_data[index+1] - time
-        tau_data = np.append(tau_data, tau)
+    try:
+        df['times'] = df['times'].apply(ast.literal_eval)
+        df['times_cumulative'] = df['times_cumulative'].apply(ast.literal_eval)
+        log.debug("Columnas 'times' y 'times_cumulative' convertidas a listas correctamente.")
+    except Exception as e:
+        log.error(f"Error al convertir las columnas de string a lista: {e}")
+        return
+    values = []
+    for index, row in df.iterrows():
+        times_data = row['times'].tolist()
+        tau_data = np.array([])
 
-    return tau_data
+        for index, time in enumerate(times_data):
+            log.debug(f"Time {index}: {time}")
+            if index+1 > len(times_data)-1:
+                break
+            tau = times_data[index+1] - time
+            tau_data = np.append(tau_data, tau)
+
+        value = {"N": df['N'].iloc[0], "phi": df['phi'].iloc[0], "tau_values": tau_data}
+        values.append(value)
+    log.debug(f"Valores de tau leídos: {values}")
+    df = pd.DataFrame(values, columns=["N", "phi", "tau_values"])
+    output_file = OUTPUT_FILE_DIR + "tau_values.txt"    
+    df.to_csv(output_file, sep=';', index=False)
+    log.info(f"Valores de tau guardados en: {output_file}")
+
+    return df
 
 if __name__ == "__main__":
     taus = read_times_data("data/output_tau.txt")

@@ -148,7 +148,7 @@ def main(file_path: str, save_animation: bool = False):
 
 
 if __name__ == "__main__":
-    base_path = "data/"
+    base_path = "data/sim/"
     
     if len(sys.argv) > 1:
         log.debug(f"Command-line argument for file path detected: {sys.argv[1]}")
