@@ -8,16 +8,16 @@ import pedestrian.Peaton;
 
 public class Beeman implements Integrator {
     
-    // Conds periodicas de contorno
     private Vector2D wrapPosition(Peaton peaton, Vector2D pos, double L) {
         double x = pos.getX();
         double y = pos.getY();
 
-        if(x > L){
-            x = x - L * Math.floor(x / L);
+        if (x < 0 || x >= L) {
+            x = x - L * Math.floor(x / L); 
             peaton.setCollisionTime(null);
         }
-        if(y > L) {
+        
+        if (y < 0 || y >= L) {
             y = y - L * Math.floor(y / L);
             peaton.setCollisionTime(null);
         }

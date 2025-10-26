@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
@@ -24,16 +26,18 @@ public class Simulation {
 
     private FileWriter SIMULATION_WRITER;
     private FileWriter TIME_WRITER;
+    private Logger logger;
 
     // sim params por ahora son inventados :)
     private static final int N_PEATONES = 10;
-    private static final double MASS = 70.0;
+    private static final double MASS = 80.0;
     private static final double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
     private static final double DT = 0.001;
-    private static final double TOTAL_TIME = 10.0;
-    private static final double OUTPUT_DT = 0.1;
+    private static final double TOTAL_TIME = 100.0;
+    private static final double OUTPUT_DT = 0.05;
     private double time = 0.0;
+    private double nextOutputTime = 0.0;
 
     private List<Peaton> peatones;
     private List<Double> colls;
@@ -51,6 +55,7 @@ public class Simulation {
             this.integrator = new Beeman();
             this.cim = new CellIndexMethod(L, RC_INTERACTION);
             this.colls = new ArrayList<>();
+            this.logger = LoggerFactory.getLogger(this.getClass());
         try {
             this.SIMULATION_WRITER = new FileWriter("simulation.csv");
             this.TIME_WRITER = new FileWriter("times.csv");
@@ -64,10 +69,13 @@ public class Simulation {
         for(Peaton other: neighbors){
             double distance = CellIndexMethod.calculatePeriodicDistance(p.getPosition(), other.getPosition(), L);
             if(cim.insideRC(distance)){
-                Vector2D force = p.calculateForce(other, distance, ID_AGENTE_CENTRAL, time, colls);
+                Vector2D distanceVector = CellIndexMethod.calculatePeriodicDistanceVector(p.getPosition(), other.getPosition(), L);
+                Vector2D force = p.calculateForceAgainstParticle(other, distance, distanceVector, ID_AGENTE_CENTRAL, time, colls);
                 p.addToResultantForce(force);
             }
         }
+        Vector2D selfDrivenForce = p.calculateSelfDrivenForce();
+        p.addToResultantForce(selfDrivenForce);
     }
 
     private void prepareSimulation(){
@@ -86,7 +94,11 @@ public class Simulation {
         printHeaders();
         
         while(time < TOTAL_TIME) {
-            printSimulation(peatones, time);
+            if(time >= nextOutputTime){
+                printSimulation(peatones, time);
+                nextOutputTime += OUTPUT_DT;
+            }
+            //logSimulationState(peatones, time);
             // prediccion inicial
             integrator.predict(peatones, DT, L); 
 
@@ -152,8 +164,8 @@ public class Simulation {
 
     private void printHeaders(){
         try {
-            this.TIME_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
-            this.SIMULATION_WRITER.write(String.format("N=%d\nL=%.1f\n", N_PEATONES, L));
+            this.TIME_WRITER.write(String.format("N=%d\nL=%d\n", N_PEATONES + 1, Math.round(L)));
+            this.SIMULATION_WRITER.write(String.format("N=%d\nL=%d\n", N_PEATONES + 1, Math.round(L)));
 
             this.SIMULATION_WRITER.flush();
             this.TIME_WRITER.flush();
@@ -178,12 +190,20 @@ public class Simulation {
         try {
             this.SIMULATION_WRITER.write(String.format("t=%.3f\n", currentTime));
             this.SIMULATION_WRITER.write("id;x;y;r\n");
+            this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", this.agenteCentral.getId(), this.agenteCentral.getPosition().getX(), this.agenteCentral.getPosition().getY(), this.agenteCentral.getRadius()));
             for(Peaton p : peatons)
                 this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius()));
             
             this.SIMULATION_WRITER.flush();
         } catch (IOException e) {
             throw new Error("Bryat 4");
+        }
+    }
+
+    private void logSimulationState(List<Peaton> peatones, double currentTime){
+        this.logger.info("t={}\n", currentTime);
+        for(Peaton p: peatones){
+            this.logger.info("id = {}; x = {}; y = {}; r = {}; vx = {}; vy = {}; dvx = {}; dvy = {}; Fx = {}; Fy = {}\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius(), p.getvelocity().getX(), p.getvelocity().getY(), p.getDesiredVelocity().getX(), p.getDesiredVelocity().getY(), p.getResultantForce().getX(), p.getResultantForce().getY());
         }
     }
 }
