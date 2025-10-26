@@ -6,13 +6,13 @@ import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 public class Peaton {
     // Force constants (Vicsek paper)
-    private final static int Kn = 12000; // 1,2 * 10^5 kg * s^(-2) todo check units (because of kg)
-    private final static int Kt = 24000; // 2,4 * 10^5 kg * s^(-1) * m^(-1)
+    private final static int Kn = 120000; // 1,2 * 10^5 kg * s^(-2)
+    private final static int Kt = 240000; // 2,4 * 10^5 kg * s^(-1) * m^(-1)
 
     // Cell index method y bueno, la mass para la fuerza
     private final int id;
     private final double radius;
-    private final double mass;       // todo check units
+    private final double mass;
 
     // Para los integradores y la sim en si
     private Vector2D position;
@@ -55,6 +55,9 @@ public class Peaton {
     public Vector2D getpreviousAcceleration() { return previousAcceleration; }
     public double getColissionTime() { return collisionTime; }
 
+    public Vector2D getDesiredVelocity() { return desiredVelocity; };
+    public Vector2D getResultantForce() { return resultantForce; }
+
     public void setPosition(Vector2D nuevaposition) { this.position = nuevaposition; }
     public void setVelocity(Vector2D nuevavelocity) { this.velocity = nuevavelocity; }
     
@@ -92,14 +95,15 @@ public class Peaton {
         return argument > 0 ? argument : 0;
     }
 
-    public Vector2D calculateForceAgainstParticle(Peaton other, double CMDistance, int idAC, double time, List<Double> colls){
+    public Vector2D calculateForceAgainstParticle(Peaton other, double CMDistance, Vector2D distanceVector, int idAC, double time, List<Double> colls){
         Vector2D toReturn = Vector2D.ZERO;
         double rij = this.radius + other.radius;
         double overlapping = GFunction(rij - CMDistance);
 
         if(overlapping > 0){
             // points from other to this
-            Vector2D normalVersor = this.position.subtract(other.position).scalarMultiply(1.0/CMDistance);        // n_hat
+
+            Vector2D normalVersor = distanceVector.scalarMultiply(1.0/CMDistance);        // n_hat
             Vector2D tangentialVersor = new Vector2D(-normalVersor.getY(), normalVersor.getX());                // t_hat
             double deltaVelocity = other.velocity.subtract(this.velocity).dotProduct(tangentialVersor);         // (v_other - v_this) * t_hat
 
@@ -111,6 +115,7 @@ public class Peaton {
             if(collisionTime == null && other.id == idAC){
                 collisionTime = time;
                 colls.add(time);
+
             }
         }
 

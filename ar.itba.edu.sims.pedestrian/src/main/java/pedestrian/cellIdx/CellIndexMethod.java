@@ -116,6 +116,25 @@ public class CellIndexMethod {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    public static Vector2D calculatePeriodicDistanceVector(Vector2D p1, Vector2D p2, double L){
+        double dx = p1.getX() - p2.getX();
+        double dy = p1.getY() - p2.getY();
+
+        if (dx > L / 2.0) {
+            dx -= L;
+        } else if (dx <= -L / 2.0) {
+            dx += L;
+        }
+
+        if (dy > L / 2.0) {
+            dy -= L;
+        } else if (dy <= -L / 2.0) {
+            dy += L;
+        }
+
+        return new Vector2D(dx, dy);
+    }
+
     public boolean insideRC(double distance){
         return Double.compare(distance, rc) <= 0;
     }
