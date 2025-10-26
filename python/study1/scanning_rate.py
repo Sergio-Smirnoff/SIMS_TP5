@@ -1,4 +1,5 @@
 
+import datetime
 import os
 import sys
 from pathlib import Path
@@ -22,7 +23,7 @@ OUTPUT_GRAPH_DIR = "output/study1/graphs/"
 
 OUTPUT_FILE_DIR = "output/study1/data/"
 
-def calculate_phi(data: pd.DataFrame, L: float, N: int) -> float:
+def calculate_phi(data: pd.DataFrame, L: float, N: int):
     """
     Calculate the phi value from the given DataFrame.
     phi = (sum of all particle areas) / (total area of the box)
@@ -36,7 +37,7 @@ def calculate_phi(data: pd.DataFrame, L: float, N: int) -> float:
 
 
 
-def calculate_phi_times(file_path: str):
+def calculate_phi_times(file_path: str) -> str:
     """
     Suposicion: Todos los archivos dentro de las carpetas sim y time tienen el mismo nombre salvo por N
     por lo cual, puedo suponer que estan en ese orden. Luego cuando tenga las 2 listas emparejo los valores
@@ -49,10 +50,11 @@ def calculate_phi_times(file_path: str):
 
     # calculo de phi
     phi_values = []
-    out_file = open(OUTPUT_FILE_DIR + "phi_times_values.txt", "w")
+    to_return = OUTPUT_FILE_DIR + f"phi_times_values_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    out_file = open(to_return, "w")
 
     for file in sim_files:
-        if file.endswith(".txt"):
+        if file.endswith(".csv"):
             log.info(f"Found tau file: {file}")
             reader = FileReader(os.path.join(file_path, "sim", file))
             N = reader.parameters["N"]
@@ -70,7 +72,7 @@ def calculate_phi_times(file_path: str):
     times_values = []
 
     for file in time_files:
-        if file.endswith(".txt"):
+        if file.endswith(".csv"):
             log.info(f"Found time file: {file}\n")
             reader = FileReader(os.path.join(file_path, "times", file))
             N = reader.parameters["N"]
@@ -82,7 +84,7 @@ def calculate_phi_times(file_path: str):
             times_values.append({"times": times, "times_cumulative": times_cumulative})
 
     rows = []
-
+    headers = ["N", "phi", "times", "times_cumulative"]
     # Emparejamiento de valores
     for i in range(len(phi_values)):
         N = phi_values[i]['N']
@@ -92,7 +94,7 @@ def calculate_phi_times(file_path: str):
 
         log.debug(f"N: {N}, phi: {phi}, times: {times['t'].tolist()}, times_cumulative: {times_cumulative}\n")
 
-        headers = ["N", "phi", "times", "times_cumulative"]
+        
         row = {
             "N": N,
             "phi": phi,
@@ -105,13 +107,14 @@ def calculate_phi_times(file_path: str):
     df.to_csv(out_file, sep=';', index=False, header=headers)
 
     out_file.close()
+    return to_return
 
-def graph_cumulative_times():
+def graph_cumulative_times(file: str = OUTPUT_FILE_DIR + "phi_times_values.txt"):
     """
     Graph cumulative times from the output file.
     """
-    log.info(f"Graphing cumulative times from: {OUTPUT_FILE_DIR + "phi_times_values.txt"}\n")
-    df = pd.read_csv(OUTPUT_FILE_DIR + "phi_times_values.txt", sep=';')
+    log.info(f"Graphing cumulative times from: {file}\n")
+    df = pd.read_csv(file, sep=';')
 
     try:
         df['times'] = df['times'].apply(ast.literal_eval)
@@ -133,10 +136,14 @@ def graph_cumulative_times():
 
         plt.figure()
         plt.plot(times, times_cumulative, marker='o', label=f'N={N}, phi={phi:.4f}')
-        plt.xlabel('Time')
-        plt.ylabel('Cumulative Contacts')
-        plt.title(f'Cumulative Contacts vs Time')
-        plt.legend()
+        plt.xlabel('Time', fontsize='x-large')
+        plt.ylabel('Cumulative Contacts', fontsize='x-large')
+        plt.xticks(np.arange(0, max(times) + 10, 10))
+        plt.yticks(np.arange(0, max(times_cumulative) + 5, 5))
+
+        # 3. Aumentar el tamaño de la fuente de los NÚMEROS en los ejes (los tick labels)
+        plt.tick_params(axis='both', which='major', labelsize=12)
+        plt.legend(fontsize='large')
         plt.grid()
         output_path = os.path.join(OUTPUT_GRAPH_DIR, f'cumulative_times_N{N}_phi{phi:.4f}.png')
         plt.savefig(output_path)
@@ -156,7 +163,7 @@ def calculate_scanning_rate(file_path: str, output_file: str, from_time: float =
         log.debug("Columnas 'times' y 'times_cumulative' convertidas a listas correctamente.")
     except Exception as e:
         log.error(f"Error al convertir las columnas de string a lista: {e}")
-        return
+        return None
 
     scanning_rates = []
 
@@ -166,16 +173,55 @@ def calculate_scanning_rate(file_path: str, output_file: str, from_time: float =
         times_cumulative = row['times_cumulative'][from_time:]
         times = row['times'][from_time:]
 
-        fit = np.polyfit(times, times_cumulative, 1)
-
+        fit, cov = np.polyfit(times, times_cumulative, 1, cov=True)
+        error_slope = np.sqrt(cov[0,0])
         scanning_rate = fit[0]
-        scanning_rates.append({'N': N, 'phi': phi, 'scanning_rate': scanning_rate})
-        log.info(f"N={N}, phi={phi:.4f}, Scanning Rate={scanning_rate:.4f}\n")
+        scanning_rates.append({'N': N, 'phi': phi, 'scanning_rate': scanning_rate, 'error_slope': error_slope})
+        log.info(f"N={N}, phi={phi:.4f}, Scanning Rate={scanning_rate:.4f}, Error={error_slope:.4f}\n")
 
     out_df = pd.DataFrame(scanning_rates)
     out_df.to_csv(output_file, sep=';', index=False)
     log.info(f"Saved scanning rates to: {output_file}\n")
     return out_df
+
+def avg_scanning_rate(input_dir: str, output_dir: str, from_time: int = 22) -> pd.DataFrame:
+    """
+    Calcula el promedio de scanning rates agrupando por N.
+    Mantiene los mismos nombres de columnas que el DataFrame original.
+    """
+    log.info(f"Calculando promedio de scanning rates desde: {input_dir}\n")
+
+    # Leer todos los archivos válidos del directorio
+    files = [f for f in os.listdir(input_dir) if f.endswith('.csv') or f.endswith('.txt')]
+    dfs = []
+
+    for file in files:
+        file_path = os.path.join(input_dir, file)
+        log.info(f"Procesando archivo: {file_path}")
+        df = calculate_scanning_rate(file_path, output_file=output_dir + f"scanning_rates_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", from_time=from_time)
+        if df is not None:
+            dfs.append(df)
+
+    if not dfs:
+        log.warning("No se generaron DataFrames válidos.")
+        return None
+
+    # Concatenar todos los resultados en un solo DataFrame
+    combined_df = pd.concat(dfs, ignore_index=True)
+
+    # Agrupar por N y calcular los promedios
+    avg_df = combined_df.groupby('N', as_index=False).agg({
+        'phi': 'mean',
+        'scanning_rate': 'mean',
+        'error_slope': 'mean'
+    })
+
+    # Guardar el resultado con los mismos headers
+    avg_df.to_csv(output_dir + f"avg_scanning_rates.csv", sep=';', index=False)
+    log.info(f"Promedios por N guardados en: {output_dir + f'avg_scanning_rates.csv'}")
+
+    return avg_df
+
 
 def graph_scanning_rate(df: pd.DataFrame, output_path: str):
     """
@@ -186,7 +232,7 @@ def graph_scanning_rate(df: pd.DataFrame, output_path: str):
     plt.figure()
     for N in df['N'].unique():
         subset = df[df['N'] == N]
-        plt.plot(subset['phi'], subset['scanning_rate'], marker='o', label=f'N={N}')
+        plt.errorbar(subset['phi'], subset['scanning_rate'], yerr=subset['error_slope'], fmt='o', capsize=4, label=f'N={N}')
 
     plt.xlabel('Phi')
     plt.ylabel('Scanning Rate')
@@ -208,21 +254,26 @@ if __name__ == "__main__":
         log.error("Error: No se especificó una acción. Use --cumulativegraph o --scanningrate.")
         sys.exit(1)
 
-    log.info("Calculando valores de phi y tiempos...")
-    calculate_phi_times("data/")
+    # create folders if not exist
+    os.makedirs(OUTPUT_FILE_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_GRAPH_DIR, exist_ok=True)
+
+
 
     action = sys.argv[1]
     
     if action == '--cumulativegraph':
         log.info("Acción seleccionada: Graficar tiempos acumulados.")
-        graph_cumulative_times()
-
+        log.info("Calculando valores de phi y tiempos...")
+        file = calculate_phi_times("data/")
+        graph_cumulative_times(file)
     elif action == '--scanningrate':
         log.info("Acción seleccionada: Calcular y graficar scanning rate.")
-        df = calculate_scanning_rate(OUTPUT_FILE_DIR + "phi_times_values.txt", OUTPUT_FILE_DIR + "scanning_rates.txt", from_time=5)
+        ## modificar la entrada
+        df = avg_scanning_rate(OUTPUT_FILE_DIR, OUTPUT_FILE_DIR)
+
         log.debug(f"Scanning rates calculados:\n{df}\n")
         graph_scanning_rate(df, OUTPUT_GRAPH_DIR + "scanning_rate_graph.png")
-    
     else:
         log.error(f"Error: Acción desconocida '{action}'. Use --cumulativegraph o --scanningrate.")
         sys.exit(1)
