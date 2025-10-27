@@ -48,6 +48,7 @@ def process_and_group_taus(input_dir: str) -> pd.DataFrame:
         for _, row in df.iterrows():
             times_data = np.array(row['times'])
             
+            times_data = np.sort(times_data)
             tau_values = np.diff(times_data)
             tau_values = tau_values[tau_values > 0]
 
@@ -78,7 +79,8 @@ def process_and_group_taus(input_dir: str) -> pd.DataFrame:
 
 def analyze_tau_distribution(grouped_tau_df: pd.DataFrame, output_graph_dir: str):
     """
-    Analiza la distribución de los valores de tau para cada N y ajusta una ley de potencias.
+    Analiza la distribución de los valores de tau para cada N, ajusta una ley de potencias
+    y la compara con una distribución exponencial para validar el modelo.
     """
     if grouped_tau_df is None or grouped_tau_df.empty:
         log.error("El DataFrame de taus está vacío. No hay nada que analizar.")
@@ -104,14 +106,35 @@ def analyze_tau_distribution(grouped_tau_df: pd.DataFrame, output_graph_dir: str
         
         log.info(f"--> Resultado para N={N}: alpha = {alpha:.3f} ± {sigma:.3f}")
         
-        alpha_results.append({'N': N, 'phi': phi, 'alpha': alpha, 'sigma': sigma})
+        R, p_value = fit.distribution_compare('power_law', 'exponential')
+        
+        log.info(f"--> Comparación con Exponencial: Log-likelihood Ratio (R) = {R:.3f}, p-valor = {p_value:.3f}")
+        
+        if p_value < 0.1:
+            if R > 0:
+                log.info("--> Conclusión: La ley de potencias es un ajuste significativamente mejor.")
+            else:
+                log.info("--> Conclusión: La exponencial es un ajuste significativamente mejor.")
+        else:
+            log.info("--> Conclusión: No hay una diferencia estadísticamente significativa entre los modelos.")
+        
+        alpha_results.append({
+            'N': N, 
+            'phi': phi, 
+            'alpha': alpha, 
+            'sigma': sigma,
+            'R_vs_exp': R,
+            'p_value_vs_exp': p_value
+        })
         
         fig, ax = plt.subplots(figsize=(10, 7))
         fit.plot_pdf(ax=ax, color='b', linewidth=2, label='Datos Empíricos')
-        fit.power_law.plot_pdf(ax=ax, color='r', linestyle='--', linewidth=2, label=f'Ajuste ($\\alpha$={alpha:.2f})')
-        
-        ax.set_xlabel('$\\tau$', fontsize=14)
-        ax.set_ylabel('PDF', fontsize=14)
+        #fit.power_law.plot_pdf(ax=ax, color='r', linestyle='--', linewidth=2, label=f'Ajuste Ley de Potencias ($\\alpha$={alpha:.2f})')
+        fit.exponential.plot_pdf(ax=ax, color='g', linestyle=':', linewidth=2, label='Ajuste Exponencial') # Línea nueva
+
+        ax.set_title(f'Distribución de $\\tau$ para N={N} ($\\phi \\approx$ {phi:.3f})', fontsize=16)
+        ax.set_xlabel('Intervalo de tiempo ($\\tau$)', fontsize=14)
+        ax.set_ylabel('Función de Densidad de Probabilidad (PDF)', fontsize=14)
         ax.legend(fontsize='large')
         ax.grid(True, which="both", ls="--", linewidth=0.5)
         
@@ -120,21 +143,21 @@ def analyze_tau_distribution(grouped_tau_df: pd.DataFrame, output_graph_dir: str
         plt.close(fig)
         log.info(f"Gráfico de distribución guardado en: {output_path}")
 
-
     if not alpha_results:
         log.warning("No se generaron resultados de alpha. No se puede crear el gráfico final.")
         return
     
     results_df = pd.DataFrame(alpha_results).sort_values(by='phi')
     
-    log.info(f"\nResumen de exponentes calculados:\n{results_df.to_string(index=False)}")
+    log.info(f"\nResumen de exponentes calculados y comparación:\n{results_df.to_string(index=False)}")
     
     plt.figure(figsize=(12, 8))
     plt.errorbar(results_df['phi'], results_df['alpha'], yerr=results_df['sigma'], 
                  fmt='o-', capsize=5, markerfacecolor='royalblue', markeredgecolor='black', ecolor='darkgray', label='Exponente $\\alpha$ medido')
     
-    plt.xlabel('$\\phi$', fontsize=14)
-    plt.ylabel('$\\alpha$', fontsize=14)
+    plt.title('Exponente de la Ley de Potencias ($\\alpha$) vs. Fracción de Área ($\\phi$)', fontsize=16)
+    plt.xlabel('Fracción de Área ($\\phi$)', fontsize=14)
+    plt.ylabel('Exponente ($\\alpha$)', fontsize=14)
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.legend()
     
