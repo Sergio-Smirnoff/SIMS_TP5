@@ -47,7 +47,6 @@ def create_animation(file_path: str, save_animation: bool = False):
     ax.set_aspect('equal')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
-    ax.set_title('Particle Simulation')
     
     circles = []
     colors = plt.cm.rainbow(np.linspace(0, 1, N))

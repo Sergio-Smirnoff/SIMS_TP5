@@ -236,7 +236,6 @@ def graph_scanning_rate(df: pd.DataFrame, output_path: str):
 
     plt.xlabel('Phi')
     plt.ylabel('Scanning Rate')
-    plt.title('Scanning Rate vs Phi')
     plt.legend()
     plt.grid()
     plt.savefig(output_path)
