@@ -17,7 +17,7 @@ import pedestrian.integrators.Integrator;
 
 public class Simulation {
     // Parametros (principalmente) para el cell index
-    private static final double L = 6.0;
+    private static double L = 6.0;
     private static final double R_MIN_MOVIL = 0.18;
     private static final double R_MAX_MOVIL = 0.21;
     private static final double R_FIJO = 0.21;
@@ -29,12 +29,12 @@ public class Simulation {
     private Logger logger;
 
     // sim params por ahora son inventados :)
-    private static final int N_PEATONES = 10;
+    private static int N_PEATONES = 10;
     private static final double MASS = 80.0;
-    private static final double DESIRED_VELOCITY = 1.7;
+    private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
-    private static final double DT = 0.001;
-    private static final double TOTAL_TIME = 100.0;
+    private static double DT = 0.001;
+    private static double TOTAL_TIME = 100.0;
     private static final double OUTPUT_DT = 0.05;
     private double time = 0.0;
     private double nextOutputTime = 0.0;
@@ -46,6 +46,27 @@ public class Simulation {
     private CellIndexMethod cim;
     private final Random random;
     private final Integrator integrator; 
+    
+    public Simulation( int nPeatons, double desiredVelocity, double dt, double totalTime, double L ) {
+        N_PEATONES = nPeatons;
+        DESIRED_VELOCITY = desiredVelocity;
+        DT = dt;
+        TOTAL_TIME = totalTime;
+        Simulation.L = L;
+        this.random = new Random();
+        this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
+        initializeParticles();
+        this.integrator = new Beeman();
+        this.cim = new CellIndexMethod(L, RC_INTERACTION);
+        this.colls = new ArrayList<>();
+        this.logger = LoggerFactory.getLogger(this.getClass());
+        try {
+            this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
+            this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
+        } catch (IOException ex) {
+            throw new Error("Bryat");
+        }
+    }
 
     // Fijo al agente del medio, inicializa las particulas y crea el cell idx
     public Simulation() {
@@ -57,8 +78,8 @@ public class Simulation {
             this.colls = new ArrayList<>();
             this.logger = LoggerFactory.getLogger(this.getClass());
         try {
-            this.SIMULATION_WRITER = new FileWriter("simulation.csv");
-            this.TIME_WRITER = new FileWriter("times.csv");
+            this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
+            this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
         } catch (IOException ex) {
             throw new Error("Bryat");
         }

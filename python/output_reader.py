@@ -38,10 +38,31 @@ class FileReader:
         for line in flines:
             key, value = line.strip().split('=')
             if key in self.parameters:
-                self.parameters[key] = int(value)
+                if key == "N":
+                    self.parameters[key] = int(value)
+                else:
+                    self.parameters[key] = float(value)
 
         return self.parameters
     
+    def read_times(self) -> pd.DataFrame:
+        """
+        Reads the time data from the simulation output file
+        Returns a DataFrame containing the time data
+        """
+        headers_line = self.file.readline()
+        headers = headers_line.strip().split(';')
+        
+        data = []
+        for line in self.file:
+            if line.strip() == "":
+                continue
+            row = np.fromstring(line.strip(), sep=';')
+            data.append(row)
+        
+        df = pd.DataFrame(data, columns=headers)
+        return df
+
     def read_next_timestep(self) -> pd.DataFrame:
         """
         Reads the next timestep from the simulation output file
