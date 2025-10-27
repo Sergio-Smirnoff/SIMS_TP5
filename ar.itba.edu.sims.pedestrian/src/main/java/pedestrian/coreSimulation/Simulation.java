@@ -19,9 +19,9 @@ import pedestrian.integrators.Integrator;
 public class Simulation {
     // Parametros (principalmente) para el cell index
     private static double L = 6.0;
-    private static final double R_MIN_MOVIL = 0.18;
-    private static final double R_MAX_MOVIL = 0.21;
-    private static final double R_FIJO = 0.21;
+    private static final double R_MIN_MOVIL = 0.16;
+    private static final double R_MAX_MOVIL = 0.18;
+    private static final double R_FIJO = 0.18;
     private static final double RC_INTERACTION = R_MAX_MOVIL + R_FIJO;
     private static final int ID_AGENTE_CENTRAL = 0;
 
@@ -30,7 +30,7 @@ public class Simulation {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());;
 
     // sim params por ahora son inventados :)
-    private static int N_PEATONES = 213;
+    private static int N_PEATONES = 310;
     private static final double MASS = 80.0;
     private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
@@ -118,7 +118,7 @@ public class Simulation {
                 printSimulation(peatones, time);
                 nextOutputTime += OUTPUT_DT;
             }
-            //logSimulationState(peatones, time);
+            // logSimulationState(peatones, time);
             // prediccion inicial
             integrator.predict(peatones, DT, L); 
 
@@ -140,9 +140,8 @@ public class Simulation {
     // ----------- Start: Initialize particles ------------
 
     private void initializeParticlesOnHexGrid() {
-        // --- Step 1: Generate all possible grid points ---
         List<Vector2D> potentialPositions = new ArrayList<>();
-        final double spacing = 2 * R_MAX_MOVIL + 0.01; // Spacing to guarantee no overlaps
+        final double spacing = 2 * R_MAX_MOVIL;
         final double dx = spacing;
         final double dy = spacing * Math.sqrt(3.0) / 2.0;
 
@@ -178,13 +177,10 @@ public class Simulation {
             logger.warn("Could not generate enough non-overlapping grid points ({}) for {} particles. " +
                             "Consider increasing L or decreasing N. Placing {} particles instead.",
                     potentialPositions.size(), N_PEATONES, potentialPositions.size());
-            // This will place as many particles as possible
         }
 
-        // --- Step 2: Shuffle the list of potential positions ---
         Collections.shuffle(potentialPositions, random);
 
-        // --- Step 3: Create particles using the first N shuffled positions ---
         this.peatones = new ArrayList<>();
         int id = 1;
         int particlesToPlace = Math.min(N_PEATONES, potentialPositions.size());
@@ -193,7 +189,6 @@ public class Simulation {
         for (int i = 0; i < particlesToPlace; i++) {
             Vector2D position = potentialPositions.get(i);
 
-            // Particle properties can still be random
             double radius = R_MIN_MOVIL + (R_MAX_MOVIL - R_MIN_MOVIL) * random.nextDouble();
             double phi = 2 * Math.PI * random.nextDouble();
             double vx = DESIRED_VELOCITY * Math.cos(phi);
