@@ -3,6 +3,7 @@ package pedestrian.coreSimulation;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import org.slf4j.Logger;
@@ -26,15 +27,15 @@ public class Simulation {
 
     private FileWriter SIMULATION_WRITER;
     private FileWriter TIME_WRITER;
-    private Logger logger;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());;
 
     // sim params por ahora son inventados :)
-    private static int N_PEATONES = 10;
+    private static int N_PEATONES = 213;
     private static final double MASS = 80.0;
     private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
     private static double DT = 0.001;
-    private static double TOTAL_TIME = 100.0;
+    private static double TOTAL_TIME = 50;
     private static final double OUTPUT_DT = 0.05;
     private double time = 0.0;
     private double nextOutputTime = 0.0;
@@ -55,11 +56,10 @@ public class Simulation {
         Simulation.L = L;
         this.random = new Random();
         this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
-        initializeParticles();
+        initializeParticlesOnHexGrid();
         this.integrator = new Beeman();
         this.cim = new CellIndexMethod(L, RC_INTERACTION);
         this.colls = new ArrayList<>();
-        this.logger = LoggerFactory.getLogger(this.getClass());
         try {
             this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
             this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
@@ -72,11 +72,10 @@ public class Simulation {
     public Simulation() {
             this.random = new Random();
             this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
-            initializeParticles();
+        initializeParticlesOnHexGrid();
             this.integrator = new Beeman();
             this.cim = new CellIndexMethod(L, RC_INTERACTION);
             this.colls = new ArrayList<>();
-            this.logger = LoggerFactory.getLogger(this.getClass());
         try {
             this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
             this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
@@ -139,46 +138,79 @@ public class Simulation {
 
 
     // ----------- Start: Initialize particles ------------
-    private void initializeParticles() {
-        peatones = new ArrayList<>();
-        int id = 1;
-        while (peatones.size() < N_PEATONES) {
-            double radius = R_MIN_MOVIL + (R_MAX_MOVIL - R_MIN_MOVIL) * random.nextDouble();
-            
-            double x = L * random.nextDouble();
-            double y = L * random.nextDouble();
-            Vector2D position = new Vector2D(x, y);
 
-            double phi = 2*Math.PI*random.nextDouble();
+    private void initializeParticlesOnHexGrid() {
+        // --- Step 1: Generate all possible grid points ---
+        List<Vector2D> potentialPositions = new ArrayList<>();
+        final double spacing = 2 * R_MAX_MOVIL + 0.01; // Spacing to guarantee no overlaps
+        final double dx = spacing;
+        final double dy = spacing * Math.sqrt(3.0) / 2.0;
+
+        logger.info("Generating potential grid points for particle initialization...");
+        int row = 0;
+        while (true) {
+            double y = row * dy;
+            // Stop if the next row of particles would be outside the boundary
+            if (y + R_MAX_MOVIL > L) {
+                break;
+            }
+
+            int col = 0;
+            while (true) {
+                double xOffset = (row % 2 == 0) ? 0 : dx / 2.0;
+                double x = col * dx + xOffset;
+                // Stop if the next particle in the row would be outside the boundary
+                if (x + R_MAX_MOVIL > L) {
+                    break;
+                }
+
+                Vector2D position = new Vector2D(x, y);
+                // Only add the position if a particle placed here wouldn't overlap the central agent
+                if (!checkOverlapWithRadius(position, R_MAX_MOVIL, agenteCentral)) {
+                    potentialPositions.add(position);
+                }
+                col++;
+            }
+            row++;
+        }
+
+        if (potentialPositions.size() < N_PEATONES) {
+            logger.warn("Could not generate enough non-overlapping grid points ({}) for {} particles. " +
+                            "Consider increasing L or decreasing N. Placing {} particles instead.",
+                    potentialPositions.size(), N_PEATONES, potentialPositions.size());
+            // This will place as many particles as possible
+        }
+
+        // --- Step 2: Shuffle the list of potential positions ---
+        Collections.shuffle(potentialPositions, random);
+
+        // --- Step 3: Create particles using the first N shuffled positions ---
+        this.peatones = new ArrayList<>();
+        int id = 1;
+        int particlesToPlace = Math.min(N_PEATONES, potentialPositions.size());
+
+        logger.info("Placing {} particles on the shuffled hexagonal grid.", particlesToPlace);
+        for (int i = 0; i < particlesToPlace; i++) {
+            Vector2D position = potentialPositions.get(i);
+
+            // Particle properties can still be random
+            double radius = R_MIN_MOVIL + (R_MAX_MOVIL - R_MIN_MOVIL) * random.nextDouble();
+            double phi = 2 * Math.PI * random.nextDouble();
             double vx = DESIRED_VELOCITY * Math.cos(phi);
             double vy = DESIRED_VELOCITY * Math.sin(phi);
             Vector2D desiredVelocity = new Vector2D(vx, vy);
 
             Peaton newPeaton = new Peaton(id, position, desiredVelocity, radius, MASS, CHARACTERISTIC_TIME);
-            
-            boolean overlaps = false;
-            
-            for (Peaton existingPeaton : peatones) {
-                if (checkOverlap(newPeaton, existingPeaton)) {
-                    overlaps = true;
-                    break;
-                }
-            }
-            
-            if (!overlaps && agenteCentral != null && checkOverlap(newPeaton, agenteCentral)) {
-                 overlaps = true;
-            }
-
-            if (!overlaps) {
-                peatones.add(newPeaton);
-                id++;
-            }
+            peatones.add(newPeaton);
+            id++;
         }
+        logger.info("Successfully placed {} particles.", peatones.size());
     }
 
-    private boolean checkOverlap(Peaton p1, Peaton p2) {
-        double minDistance = p1.getRadius() + p2.getRadius();
-        double currentDistance = CellIndexMethod.calculatePeriodicDistance(p1.getPosition(), p2.getPosition(), L);
+    // A small helper method to check overlap before a particle is even created
+    private boolean checkOverlapWithRadius(Vector2D p1Pos, double p1Radius, Peaton p2) {
+        double minDistance = p1Radius + p2.getRadius();
+        double currentDistance = CellIndexMethod.calculatePeriodicDistance(p1Pos, p2.getPosition(), L);
         return currentDistance < minDistance;
     }
     // ----------- End: Initialize particles --------------
