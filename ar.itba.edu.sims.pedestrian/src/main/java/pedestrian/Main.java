@@ -4,8 +4,8 @@ import pedestrian.coreSimulation.Simulation;
 
 public class Main {
     public static void main(String[] args) {
-        //defaultRun();
-        nRun();
+        defaultRun();
+        //nRun();
     }
 
     public static void defaultRun(){
