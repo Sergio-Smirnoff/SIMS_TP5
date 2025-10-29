@@ -7,8 +7,8 @@ import pedestrian.coreSimulation.Simulation;
 public class Main {
     public static void main(String[] args) {
         Locale.setDefault(Locale.US); 
-        defaultRun();
-        //nRun();
+        //defaultRun();
+        nRun();
     }
 
     public static void defaultRun(){
@@ -21,7 +21,7 @@ public class Main {
         double dt = 0.001;
         double totalTime = 200.0;
         double L = 6.0;
-        for (int nPeatons = 9; nPeatons <= 100; nPeatons += 10) {
+        for (int nPeatons = 10; nPeatons <= 220; nPeatons += 10) {
             Simulation s = new Simulation(nPeatons, desiredVelocity, dt, totalTime, L);
             s.runSimulation();
         }

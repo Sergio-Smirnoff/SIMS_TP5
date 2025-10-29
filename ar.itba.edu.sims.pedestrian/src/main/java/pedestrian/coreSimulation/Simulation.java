@@ -19,9 +19,9 @@ import pedestrian.integrators.Integrator;
 public class Simulation {
     // Parametros (principalmente) para el cell index
     private static double L = 6.0;
-    private static final double R_MIN_MOVIL = 0.16;
-    private static final double R_MAX_MOVIL = 0.18;
-    private static final double R_FIJO = 0.18;
+    private static final double R_MIN_MOVIL = 0.18;
+    private static final double R_MAX_MOVIL = 0.21;
+    private static final double R_FIJO = 0.21;
     private static final double RC_INTERACTION = R_MAX_MOVIL + R_FIJO;
     private static final int ID_AGENTE_CENTRAL = 0;
 
@@ -30,7 +30,7 @@ public class Simulation {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());;
 
     // sim params por ahora son inventados :)
-    private static int N_PEATONES = 310;
+    private static int N_PEATONES = 220;
     private static final double MASS = 80.0;
     private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
@@ -227,7 +227,7 @@ public class Simulation {
             this.TIME_WRITER.write("t\n");
             for(Double c : this.colls)
                 this.TIME_WRITER.write(String.format("%.15f\n", c));
-            
+        
             this.TIME_WRITER.flush();
         } catch (IOException e) {
             throw new Error("Bryat 3");
