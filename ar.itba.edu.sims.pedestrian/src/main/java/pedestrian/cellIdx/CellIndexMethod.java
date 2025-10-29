@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
-import org.apache.commons.math3.util.Precision;
 import pedestrian.Peaton;
 
 public class CellIndexMethod {
@@ -90,8 +89,8 @@ public class CellIndexMethod {
         }
         
         double distanceToCenter = calculatePeriodicDistance(pos, agenteCentral.getPosition(), L);
-        if (distanceToCenter <= (p.getRadius() + agenteCentral.getRadius())) {
-             neighbors.add(agenteCentral); 
+        if (distanceToCenter <= rc) { 
+            neighbors.add(agenteCentral); 
         }
 
         return neighbors;

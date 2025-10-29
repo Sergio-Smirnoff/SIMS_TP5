@@ -1,9 +1,12 @@
 package pedestrian;
 
+import java.util.Locale;
+
 import pedestrian.coreSimulation.Simulation;
 
 public class Main {
     public static void main(String[] args) {
+        Locale.setDefault(Locale.US); 
         defaultRun();
         //nRun();
     }
