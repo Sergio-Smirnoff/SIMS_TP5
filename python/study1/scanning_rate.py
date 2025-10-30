@@ -5,6 +5,7 @@ from pathlib import Path
 import ast
 from collections import defaultdict
 from scipy import stats
+import json
 
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
@@ -281,6 +282,14 @@ def process_all_runs(base_dir: str) -> dict:
     log.info("\n" + "="*60)
     log.info("Finalizando el análisis de datos de las simulaciones...")
     log.info("="*60)
+
+    log.info("Análisis finalizado.")
+    log.info(f"Guardando los datos procesados en el dir: {OUTPUT_FILE_DIR}")
+    os.makedirs(OUTPUT_FILE_DIR, exist_ok=True)
+    output_json = os.path.join(OUTPUT_FILE_DIR, "scanning_rate_data.json")
+    with open(output_json, 'w') as f:
+        json.dump(final_data, f, indent=4)
+    log.info(f"JSON completo guardado en {output_json}")
 
     return final_data
 
