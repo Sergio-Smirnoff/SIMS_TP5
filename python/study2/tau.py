@@ -225,7 +225,7 @@ def analyze_power_law_clauset_method(data, n_bootstrap: int = 1000):
         'sigma': sigma,
         'xmin': xmin,
         'D': D,
-        'p_boot': p_value,              
+        'p_boot': p_boot,              
         'n_data': len(data),
         'n_tail': n_tail,
         'passes_gof': passes_gof,
