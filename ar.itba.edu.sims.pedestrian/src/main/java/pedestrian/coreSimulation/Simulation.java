@@ -19,9 +19,9 @@ import pedestrian.integrators.Integrator;
 public class Simulation {
     // Parametros (principalmente) para el cell index
     private static double L = 6.0;
-    private static final double R_MIN_MOVIL = 0.16;
-    private static final double R_MAX_MOVIL = 0.18;
-    private static final double R_FIJO = 0.18;
+    private static final double R_MIN_MOVIL = 0.18;
+    private static final double R_MAX_MOVIL = 0.21;
+    private static final double R_FIJO = 0.21;
     private static final double RC_INTERACTION = R_MAX_MOVIL + R_FIJO;
     private static final int ID_AGENTE_CENTRAL = 0;
 
@@ -30,12 +30,12 @@ public class Simulation {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());;
 
     // sim params por ahora son inventados :)
-    private static int N_PEATONES = 310;
+    private static int N_PEATONES = 10;
     private static final double MASS = 80.0;
     private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
     private static double DT = 0.001;
-    private static double TOTAL_TIME = 50;
+    private static double TOTAL_TIME = 100;
     private static final double OUTPUT_DT = 0.05;
     private double time = 0.0;
     private double nextOutputTime = 0.0;
@@ -46,23 +46,28 @@ public class Simulation {
     private Peaton agenteCentral;
     private CellIndexMethod cim;
     private final Random random;
-    private final Integrator integrator; 
-    
-    public Simulation( int nPeatons, double desiredVelocity, double dt, double totalTime, double L ) {
+    private final Integrator integrator;
+
+    public Simulation( int nPeatons, double desiredVelocity, double dt, double totalTime, double L, int run_id ) {
         N_PEATONES = nPeatons;
         DESIRED_VELOCITY = desiredVelocity;
         DT = dt;
         TOTAL_TIME = totalTime;
         Simulation.L = L;
-        this.random = new Random();
+        this.random = new Random(run_id);
         this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
+
         initializeParticlesOnHexGrid();
         this.integrator = new Beeman();
         this.cim = new CellIndexMethod(L, RC_INTERACTION);
         this.colls = new ArrayList<>();
         try {
-            this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
-            this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
+            String sim_filename = String.format("simulation_N%d_L%.1f_TT%.1f_run%d.csv", N_PEATONES, L, TOTAL_TIME, run_id);
+            String time_filename = String.format("times_N%d_L%.1f_TT%.1f_run%d.csv", N_PEATONES, L, TOTAL_TIME, run_id);
+
+            this.SIMULATION_WRITER = new FileWriter(sim_filename);
+            this.TIME_WRITER = new FileWriter(time_filename);
+
         } catch (IOException ex) {
             throw new Error("Bryat");
         }
@@ -73,6 +78,7 @@ public class Simulation {
             this.random = new Random();
             this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
         initializeParticlesOnHexGrid();
+        //initializeSingleParticle();
             this.integrator = new Beeman();
             this.cim = new CellIndexMethod(L, RC_INTERACTION);
             this.colls = new ArrayList<>();
@@ -138,6 +144,19 @@ public class Simulation {
 
 
     // ----------- Start: Initialize particles ------------
+    private void initializeSingleParticle(){
+        this.peatones = new ArrayList<>();
+        Peaton peaton = new Peaton(
+                1,
+                new Vector2D(L / 2.0 - 1, L / 2.0),
+                new Vector2D(0, 0),
+                R_MAX_MOVIL,
+                MASS,
+                CHARACTERISTIC_TIME
+        );
+        peaton.setVelocity(new Vector2D(1, 0));
+        peatones.add(peaton);
+    }
 
     private void initializeParticlesOnHexGrid() {
         List<Vector2D> potentialPositions = new ArrayList<>();
@@ -149,7 +168,6 @@ public class Simulation {
         int row = 0;
         while (true) {
             double y = row * dy;
-            // Stop if the next row of particles would be outside the boundary
             if (y + R_MAX_MOVIL > L) {
                 break;
             }
@@ -158,13 +176,11 @@ public class Simulation {
             while (true) {
                 double xOffset = (row % 2 == 0) ? 0 : dx / 2.0;
                 double x = col * dx + xOffset;
-                // Stop if the next particle in the row would be outside the boundary
                 if (x + R_MAX_MOVIL > L) {
                     break;
                 }
 
                 Vector2D position = new Vector2D(x, y);
-                // Only add the position if a particle placed here wouldn't overlap the central agent
                 if (!checkOverlapWithRadius(position, R_MAX_MOVIL, agenteCentral)) {
                     potentialPositions.add(position);
                 }
@@ -202,7 +218,6 @@ public class Simulation {
         logger.info("Successfully placed {} particles.", peatones.size());
     }
 
-    // A small helper method to check overlap before a particle is even created
     private boolean checkOverlapWithRadius(Vector2D p1Pos, double p1Radius, Peaton p2) {
         double minDistance = p1Radius + p2.getRadius();
         double currentDistance = CellIndexMethod.calculatePeriodicDistance(p1Pos, p2.getPosition(), L);

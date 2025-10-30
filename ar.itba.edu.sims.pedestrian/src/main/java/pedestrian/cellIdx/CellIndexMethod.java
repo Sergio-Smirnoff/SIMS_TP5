@@ -90,7 +90,7 @@ public class CellIndexMethod {
         }
         
         double distanceToCenter = calculatePeriodicDistance(pos, agenteCentral.getPosition(), L);
-        if (distanceToCenter <= (p.getRadius() + agenteCentral.getRadius())) {
+        if (distanceToCenter <= rc) {
              neighbors.add(agenteCentral); 
         }
 
