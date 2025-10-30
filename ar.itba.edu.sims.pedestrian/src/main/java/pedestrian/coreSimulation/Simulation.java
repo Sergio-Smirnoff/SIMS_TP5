@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import pedestrian.Peaton;
 import pedestrian.cellIdx.CellIndexMethod;
@@ -30,7 +30,7 @@ public class Simulation {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());;
 
     // sim params por ahora son inventados :)
-    private static int N_PEATONES = 10;
+    private static int N_PEATONES = 310;
     private static final double MASS = 80.0;
     private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;
@@ -242,7 +242,7 @@ public class Simulation {
             this.TIME_WRITER.write("t\n");
             for(Double c : this.colls)
                 this.TIME_WRITER.write(String.format("%.15f\n", c));
-            
+
             this.TIME_WRITER.flush();
         } catch (IOException e) {
             throw new Error("Bryat 3");

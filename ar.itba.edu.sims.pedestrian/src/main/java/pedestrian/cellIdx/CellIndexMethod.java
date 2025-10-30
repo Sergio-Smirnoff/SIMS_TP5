@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
-import org.apache.commons.math3.util.Precision;
 import pedestrian.Peaton;
 
 public class CellIndexMethod {
