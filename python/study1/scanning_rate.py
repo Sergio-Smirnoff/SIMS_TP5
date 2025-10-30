@@ -25,15 +25,6 @@ BASE_DATA_DIR = "data/"
 OUTPUT_GRAPH_DIR = "output/study1/graphs/"
 OUTPUT_FILE_DIR = "output/study1/data/"
 
-# --- PARÁMETROS DE ANÁLISIS CONFIGURABLES ---
-FROM_TIME_MAP = {
-    9: 0, 19: 0, 29: 0, 39: 0, 49: 0,
-    59: 0, 69: 0, 79: 0, 89: 0, 99: 0,
-    109: 0, 119: 5, 129: 10, 139: 5, 149:20,
-    159: 20, 169: 20, 179: 20, 189: 20, 199: 20, 210: 0, 
-    214: 0, 220: 0
-}
-
 def separate_files(sim_dir: str, times_dir: str):
     """
     
@@ -90,12 +81,10 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
     
     for times_file in times_files:
         try:
-            # Usar FileReader para leer los tiempos
             times_reader = FileReader(times_file)
             times_df = times_reader.read_times()
             times_reader.close_file()
             
-            # Extraer los tiempos (asumiendo que la columna se llama 't')
             if 't' not in times_df.columns:
                 log.error(f"Columna 't' no encontrada en {times_file}. Columnas: {times_df.columns.tolist()}")
                 continue
@@ -107,7 +96,6 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
                 log.warning(f"Archivo vacío: {times_file}")
                 continue
             
-            # Validar que los tiempos sean positivos
             if np.any(contact_times < 0):
                 log.warning(f"Tiempos negativos en {times_file}")
                 contact_times = contact_times[contact_times >= 0]
@@ -116,10 +104,8 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
                 log.warning(f"Muy pocos contactos en {times_file}: {len(contact_times)}")
                 continue
             
-            # Ordenar tiempos
             contact_times = np.sort(contact_times)
             
-            # Crear curva de contactos acumulados
             n_contacts = np.arange(1, len(contact_times) + 1)
             
             log.info(f"Archivo {os.path.basename(times_file)}: {len(contact_times)} contactos, "
@@ -137,24 +123,20 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
         log.error("No se pudieron leer archivos de tiempos")
         return None, None, None, None, None
     
-    # Determinar el tiempo máximo común (el mínimo de todos los máximos)
     if max_time is None:
         max_time = min([times[-1] for times, _ in all_accumulated_curves])
     
     log.info(f"Tiempo máximo común para interpolación: {max_time:.2f}s")
     
-    # Validar que max_time sea razonable
     if max_time <= 0:
         log.error(f"Tiempo máximo inválido: {max_time}")
         return None, None, None, None, None
     
-    # Crear grid de tiempos común
     common_times = np.linspace(0, max_time, 1000)
     
-    # Interpolar todas las curvas al mismo grid de tiempos
     interpolated_curves = []
     for contact_times, n_contacts in all_accumulated_curves:
-        # Filtrar solo hasta max_time
+
         mask = contact_times <= max_time
         contact_times_filtered = contact_times[mask]
         n_contacts_filtered = n_contacts[mask]
@@ -163,7 +145,7 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
             log.warning("Muy pocos puntos después de filtrar por max_time")
             continue
         
-        # Interpolar linealmente
+
         interpolated = np.interp(common_times, contact_times_filtered, n_contacts_filtered)
         interpolated_curves.append(interpolated)
     
@@ -171,25 +153,25 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
         log.error("No se pudieron interpolar curvas")
         return None, None, None, None, None
     
-    # Convertir a array para facilitar operaciones
+
     interpolated_curves = np.array(interpolated_curves)
     
-    # Calcular promedio y desviación estándar
+
     avg_accumulated = np.mean(interpolated_curves, axis=0)
     std_accumulated = np.std(interpolated_curves, axis=0)
     
-    # Calcular scanning rate para cada realización
+
     transient_time = max_time * transient_fraction
     
     log.info(f"Calculando Q con régimen estacionario desde t={transient_time:.2f}s")
     
     for contact_times, n_contacts in all_accumulated_curves:
-        # Filtrar régimen estacionario
+
         mask = (contact_times > transient_time) & (contact_times <= max_time)
         
         if np.sum(mask) < 10:
             log.warning(f"Pocos puntos en régimen estacionario: {np.sum(mask)}")
-            # Intentar con menos restrictivo
+
             mask = contact_times > transient_time
             if np.sum(mask) < 5:
                 log.warning("Aún muy pocos puntos, saltando esta realización")
@@ -198,14 +180,13 @@ def calculate_times(times_files, max_time=None, transient_fraction=0.3):
         times_steady = contact_times[mask]
         contacts_steady = n_contacts[mask]
         
-        # Regresión lineal
+
         slope, intercept, r_value, p_value, std_err = stats.linregress(
             times_steady, contacts_steady
         )
         
         log.info(f"Q = {slope:.4f} contactos/s, R² = {r_value**2:.4f}, std_err = {std_err:.4f}")
-        
-        # Validar que la pendiente sea positiva y razonable
+
         if slope > 0:
             all_Q.append(slope)
         else:
