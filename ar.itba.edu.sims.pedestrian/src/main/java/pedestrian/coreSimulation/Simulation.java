@@ -19,9 +19,9 @@ import pedestrian.integrators.Integrator;
 public class Simulation {
     // Parametros (principalmente) para el cell index
     private static double L = 6.0;
-    private static final double R_MIN_MOVIL = 0.16;
-    private static final double R_MAX_MOVIL = 0.18;
-    private static final double R_FIJO = 0.18;
+    private static final double R_MIN_MOVIL = 0.18;
+    private static final double R_MAX_MOVIL = 0.21;
+    private static final double R_FIJO = 0.21;
     private static final double RC_INTERACTION = R_MAX_MOVIL + R_FIJO;
     private static final int ID_AGENTE_CENTRAL = 0;
 
@@ -63,6 +63,26 @@ public class Simulation {
         try {
             this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
             this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f.csv", N_PEATONES, L, TOTAL_TIME));
+        } catch (IOException ex) {
+            throw new Error("Bryat");
+        }
+    }
+
+    public Simulation( int nPeatons, double desiredVelocity, double dt, double totalTime, double L, int iteration ) {
+        N_PEATONES = nPeatons;
+        DESIRED_VELOCITY = desiredVelocity;
+        DT = dt;
+        TOTAL_TIME = totalTime;
+        Simulation.L = L;
+        this.random = new Random();
+        this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
+        initializeParticlesOnHexGrid();
+        this.integrator = new Beeman();
+        this.cim = new CellIndexMethod(L, RC_INTERACTION);
+        this.colls = new ArrayList<>();
+        try {
+            this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f_%d.csv", N_PEATONES, L, TOTAL_TIME, iteration));
+            this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f_%d.csv", N_PEATONES, L, TOTAL_TIME, iteration));
         } catch (IOException ex) {
             throw new Error("Bryat");
         }

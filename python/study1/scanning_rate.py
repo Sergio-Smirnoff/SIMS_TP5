@@ -1,9 +1,10 @@
-
 import datetime
 import os
 import sys
 from pathlib import Path
 import ast
+from collections import defaultdict
+from scipy import stats
 
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
@@ -15,268 +16,347 @@ import matplotlib.pyplot as plt
 from output_reader import FileReader
 
 log.basicConfig(
-    level=log.DEBUG,
+    level=log.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
+# --- Directorios de Entrada y Salida ---
+BASE_DATA_DIR = "data/"
 OUTPUT_GRAPH_DIR = "output/study1/graphs/"
-
 OUTPUT_FILE_DIR = "output/study1/data/"
 
-def calculate_phi(data: pd.DataFrame, L: float, N: int):
+# --- PARÁMETROS DE ANÁLISIS CONFIGURABLES ---
+FROM_TIME_MAP = {
+    9: 0, 19: 0, 29: 0, 39: 0, 49: 0,
+    59: 0, 69: 0, 79: 0, 89: 0, 99: 0,
+    109: 0, 119: 5, 129: 10, 139: 5, 149:20,
+    159: 20, 169: 20, 179: 20, 189: 20, 199: 20, 210: 0, 
+    214: 0, 220: 0
+}
+
+def separate_files(sim_dir: str, times_dir: str):
     """
-    Calculate the phi value from the given DataFrame.
-    phi = (sum of all particle areas) / (total area of the box)
+    
     """
-    value = {'N': N, 'phi': 0.0}
-    total_area = L * L
-    particle_areas = data['r'] ** 2 * np.pi
-    phi = particle_areas.sum() / total_area
-    value['phi'] = phi
-    return value
+    N_files = {}
 
+    try:
+        sim_files = [f for f in os.listdir(sim_dir) if f.startswith('simulation_') and f.endswith('.csv')]
+    except FileNotFoundError:
+        log.error(f"Directorio de simulación no encontrado: {sim_dir}")
+        return {}
+    except Exception as e:
+        log.error(f"Error listando archivos en {sim_dir}: {e}")
+        return {}
 
-
-def calculate_phi_times(file_path: str) -> str:
-    """
-    Suposicion: Todos los archivos dentro de las carpetas sim y time tienen el mismo nombre salvo por N
-    por lo cual, puedo suponer que estan en ese orden. Luego cuando tenga las 2 listas emparejo los valores
-    bajo esa suposicion.
-    """
-
-    log.info(f"Reading tau data from: {file_path}\n")
-    sim_files = os.listdir(file_path+"sim")
-    time_files = os.listdir(file_path+"times")
-
-    # calculo de phi
-    phi_values = []
-    to_return = OUTPUT_FILE_DIR + f"phi_times_values_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    out_file = open(to_return, "w")
-
-    for file in sim_files:
-        if file.endswith(".csv"):
-            log.info(f"Found tau file: {file}")
-            reader = FileReader(os.path.join(file_path, "sim", file))
-            N = reader.parameters["N"]
-            L = reader.parameters["L"]
-            log.info(f"Number of particles: {N}")
-            log.info(f"Box size: {L}x{L}\n")
-            df = reader.read_next_timestep() # Read first timestep only
-            reader.close_file()
-            if df is not None:
-                phi_value = calculate_phi(df, L, N)
-                phi_values.append(phi_value)
-                log.info(f"Calculated phi: {phi_value['phi']}\n")
-
-    # Tiempos de contacto
-    times_values = []
-
-    for file in time_files:
-        if file.endswith(".csv"):
-            log.info(f"Found time file: {file}\n")
-            reader = FileReader(os.path.join(file_path, "times", file))
-            N = reader.parameters["N"]
-            L = reader.parameters["L"]
-            times = reader.read_times()
-            times_cumulative = np.array(range(1,len(times)+1))
-            reader.close_file()
-            log.info(f"Number of times: {len(times)}\n")
-            times_values.append({"times": times, "times_cumulative": times_cumulative})
-
-    rows = []
-    headers = ["N", "phi", "times", "times_cumulative"]
-    # Emparejamiento de valores
-    for i in range(len(phi_values)):
-        N = phi_values[i]['N']
-        phi = phi_values[i]['phi']
-        times = times_values[i]['times']
-        times_cumulative = times_values[i]['times_cumulative']
-
-        log.debug(f"N: {N}, phi: {phi}, times: {times['t'].tolist()}, times_cumulative: {times_cumulative}\n")
-
-        
-        row = {
-            "N": N,
-            "phi": phi,
-            "times": times['t'].tolist(),
-            "times_cumulative": times_cumulative.tolist()
+    log.info(f"Recorriendo los archivos de simulacion")
+    for sim_file in sim_files:
+        to_add = {
+            'sim': os.path.join(sim_dir, sim_file),
+            'times': os.path.join(times_dir, sim_file.replace('simulation_', 'times_'))
         }
-        rows.append(row)
+        try:
+            ## Para saber en que N ponerlo
+            N = int(sim_file.split('_')[1].replace('N', ''))
 
-    df = pd.DataFrame(rows, columns=headers)
-    df.to_csv(out_file, sep=';', index=False, header=headers)
+            if N not in N_files:
+                N_files[N] = []
 
-    out_file.close()
-    return to_return
+            N_files[N].append(to_add)
 
-def graph_cumulative_times(file: str = OUTPUT_FILE_DIR + "phi_times_values.txt"):
+        except Exception as e:
+            log.error(f"Error procesando archivo {sim_file}: {e}")
+
+    return N_files
+        
+def calculate_times(times_files, max_time=None, transient_fraction=0.3):
     """
-    Graph cumulative times from the output file.
+    Calcula los tiempos promediados y acumulados de múltiples realizaciones.
+    
+    Args:
+        times_files: Lista de archivos con tiempos de contacto
+        max_time: Tiempo máximo común para interpolar (si None, usa el mínimo)
+        transient_fraction: Fracción del tiempo total considerada como transitorio
+    
+    Returns:
+        common_times: Array con tiempos comunes
+        avg_accumulated: Array con contactos acumulados promediados
+        std_accumulated: Desviación estándar de contactos acumulados
+        Q: Scanning rate promedio
+        Q_error: Error del scanning rate
     """
-    log.info(f"Graphing cumulative times from: {file}\n")
-    df = pd.read_csv(file, sep=';')
+    all_accumulated_curves = []
+    all_Q = []
+    
+    for times_file in times_files:
+        try:
+            # Usar FileReader para leer los tiempos
+            times_reader = FileReader(times_file)
+            times_df = times_reader.read_times()
+            times_reader.close_file()
+            
+            # Extraer los tiempos (asumiendo que la columna se llama 't')
+            if 't' not in times_df.columns:
+                log.error(f"Columna 't' no encontrada en {times_file}. Columnas: {times_df.columns.tolist()}")
+                continue
+            
+            contact_times = times_df['t'].values
+            
+            # Validaciones
+            if len(contact_times) == 0:
+                log.warning(f"Archivo vacío: {times_file}")
+                continue
+            
+            # Validar que los tiempos sean positivos
+            if np.any(contact_times < 0):
+                log.warning(f"Tiempos negativos en {times_file}")
+                contact_times = contact_times[contact_times >= 0]
+            
+            if len(contact_times) < 2:
+                log.warning(f"Muy pocos contactos en {times_file}: {len(contact_times)}")
+                continue
+            
+            # Ordenar tiempos
+            contact_times = np.sort(contact_times)
+            
+            # Crear curva de contactos acumulados
+            n_contacts = np.arange(1, len(contact_times) + 1)
+            
+            log.info(f"Archivo {os.path.basename(times_file)}: {len(contact_times)} contactos, "
+                    f"rango tiempo: [{contact_times[0]:.2f}, {contact_times[-1]:.2f}]s")
+            
+            all_accumulated_curves.append((contact_times, n_contacts))
+            
+        except Exception as e:
+            log.error(f"Error leyendo {times_file}: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
+    
+    if len(all_accumulated_curves) == 0:
+        log.error("No se pudieron leer archivos de tiempos")
+        return None, None, None, None, None
+    
+    # Determinar el tiempo máximo común (el mínimo de todos los máximos)
+    if max_time is None:
+        max_time = min([times[-1] for times, _ in all_accumulated_curves])
+    
+    log.info(f"Tiempo máximo común para interpolación: {max_time:.2f}s")
+    
+    # Validar que max_time sea razonable
+    if max_time <= 0:
+        log.error(f"Tiempo máximo inválido: {max_time}")
+        return None, None, None, None, None
+    
+    # Crear grid de tiempos común
+    common_times = np.linspace(0, max_time, 1000)
+    
+    # Interpolar todas las curvas al mismo grid de tiempos
+    interpolated_curves = []
+    for contact_times, n_contacts in all_accumulated_curves:
+        # Filtrar solo hasta max_time
+        mask = contact_times <= max_time
+        contact_times_filtered = contact_times[mask]
+        n_contacts_filtered = n_contacts[mask]
+        
+        if len(contact_times_filtered) < 2:
+            log.warning("Muy pocos puntos después de filtrar por max_time")
+            continue
+        
+        # Interpolar linealmente
+        interpolated = np.interp(common_times, contact_times_filtered, n_contacts_filtered)
+        interpolated_curves.append(interpolated)
+    
+    if len(interpolated_curves) == 0:
+        log.error("No se pudieron interpolar curvas")
+        return None, None, None, None, None
+    
+    # Convertir a array para facilitar operaciones
+    interpolated_curves = np.array(interpolated_curves)
+    
+    # Calcular promedio y desviación estándar
+    avg_accumulated = np.mean(interpolated_curves, axis=0)
+    std_accumulated = np.std(interpolated_curves, axis=0)
+    
+    # Calcular scanning rate para cada realización
+    transient_time = max_time * transient_fraction
+    
+    log.info(f"Calculando Q con régimen estacionario desde t={transient_time:.2f}s")
+    
+    for contact_times, n_contacts in all_accumulated_curves:
+        # Filtrar régimen estacionario
+        mask = (contact_times > transient_time) & (contact_times <= max_time)
+        
+        if np.sum(mask) < 10:
+            log.warning(f"Pocos puntos en régimen estacionario: {np.sum(mask)}")
+            # Intentar con menos restrictivo
+            mask = contact_times > transient_time
+            if np.sum(mask) < 5:
+                log.warning("Aún muy pocos puntos, saltando esta realización")
+                continue
+        
+        times_steady = contact_times[mask]
+        contacts_steady = n_contacts[mask]
+        
+        # Regresión lineal
+        slope, intercept, r_value, p_value, std_err = stats.linregress(
+            times_steady, contacts_steady
+        )
+        
+        log.info(f"Q = {slope:.4f} contactos/s, R² = {r_value**2:.4f}, std_err = {std_err:.4f}")
+        
+        # Validar que la pendiente sea positiva y razonable
+        if slope > 0:
+            all_Q.append(slope)
+        else:
+            log.warning(f"Pendiente negativa o cero: {slope}")
+    
+    if len(all_Q) == 0:
+        log.error("No se pudo calcular Q para ninguna realización")
+        Q, Q_error = 0, 0
+    else:
+        Q = np.mean(all_Q)
+        Q_error = np.std(all_Q)
+        log.info(f"Q promedio: {Q:.4f} ± {Q_error:.4f} contactos/s (n={len(all_Q)} realizaciones)")
+    
+    return common_times, avg_accumulated, std_accumulated, Q, Q_error
 
-    try:
-        df['times'] = df['times'].apply(ast.literal_eval)
-        df['times_cumulative'] = df['times_cumulative'].apply(ast.literal_eval)
-        log.debug("Columnas 'times' y 'times_cumulative' convertidas a listas correctamente.")
-    except Exception as e:
-        log.error(f"Error al convertir las columnas de string a lista: {e}")
-        return
-
-    for index, row in df.iterrows():
-        N = row['N']
-        phi = row['phi']
-        times_cumulative = row['times_cumulative']
-        times = row['times']
-
-        log.debug(f"Times:\n{times}\n")
-        log.debug(f"times[0]: {times[0]}, times[-1]: {times[-1]}\n")
-        log.debug(f"Cumulative Times:\n{times_cumulative}\n")
-
-        plt.figure()
-        plt.plot(times, times_cumulative, marker='o', label=f'N={N}, phi={phi:.4f}')
-        plt.xlabel('Time', fontsize='x-large')
-        plt.ylabel('Cumulative Contacts', fontsize='x-large')
-        plt.xticks(np.arange(0, max(times) + 10, 10))
-        plt.yticks(np.arange(0, max(times_cumulative) + 5, 5))
-
-        # 3. Aumentar el tamaño de la fuente de los NÚMEROS en los ejes (los tick labels)
-        plt.tick_params(axis='both', which='major', labelsize=12)
-        plt.legend(fontsize='large')
-        plt.grid()
-        output_path = os.path.join(OUTPUT_GRAPH_DIR, f'cumulative_times_N{N}_phi{phi:.4f}.png')
-        plt.savefig(output_path)
-        log.info(f"Saved graph to: {output_path}\n")
-        plt.close()
-
-def calculate_scanning_rate(file_path: str, output_file: str, from_time: float = 0.0) -> pd.DataFrame:
+def process_all_runs(base_dir: str) -> dict:
     """
-    Calculate scanning rate from the output file.
+    Lee todos los archivos de simulación, los agrupa por N y agrega los datos.
     """
-    log.info(f"Calculating scanning rate from: {file_path}\n")
-    df = pd.read_csv(file_path, sep=';')
+    log.info("Procesando todas las corridas de simulación...")
+    sim_dir = os.path.join(base_dir, "sim")
+    times_dir = os.path.join(base_dir, "times")
+    
+    if not os.path.exists(sim_dir) or not os.path.exists(times_dir):
+        log.error(f"Error: Los directorios '{sim_dir}' y/o '{times_dir}' no existen.")
+        sys.exit(1)
 
-    try:
-        df['times'] = df['times'].apply(ast.literal_eval)
-        df['times_cumulative'] = df['times_cumulative'].apply(ast.literal_eval)
-        log.debug("Columnas 'times' y 'times_cumulative' convertidas a listas correctamente.")
-    except Exception as e:
-        log.error(f"Error al convertir las columnas de string a lista: {e}")
-        return None
+    N_files = separate_files(sim_dir, times_dir)
 
-    scanning_rates = []
+    final_data = []
 
-    for index, row in df.iterrows():
-        N = row['N']
-        phi = row['phi']
-        times_cumulative = row['times_cumulative'][from_time:]
-        times = row['times'][from_time:]
+    # Ordenar por N
+    for N in sorted(N_files.keys()):
+        files = N_files[N]
+        log.info(f"\n{'='*60}")
+        log.info(f"Procesando N={N} con {len(files)} realizaciones")
+        log.info(f"{'='*60}")
+        
+        json_data = {
+            "N": N,
+            "simulation_times": len(files),
+            "times": [],
+            "accumulated_contacts": [],
+            "std_contacts": [],
+            "scanning_rate": 0,
+            "scanning_rate_error": 0,
+            "avg_phi": 0,
+            "error_phi": 0
+        }
+        
+        # Calcular φ
+        phis = []
+        for file_dict in files:
+            try:
+                sim_reader = FileReader(file_dict['sim'])
+                data = sim_reader.read_next_timestep()
+                sim_reader.close_file()
+                
+                L = sim_reader.parameters['L']
+                r = data['r'].to_numpy()
+                phi = np.sum(np.pi * r**2) / (L**2)
+                phis.append(phi)
+            except Exception as e:
+                log.error(f"Error procesando {file_dict['sim']}: {e}")
+                continue
 
-        fit, cov = np.polyfit(times, times_cumulative, 1, cov=True)
-        error_slope = np.sqrt(cov[0,0])
-        scanning_rate = fit[0]
-        scanning_rates.append({'N': N, 'phi': phi, 'scanning_rate': scanning_rate, 'error_slope': error_slope})
-        log.info(f"N={N}, phi={phi:.4f}, Scanning Rate={scanning_rate:.4f}, Error={error_slope:.4f}\n")
+        if len(phis) > 0:
+            json_data['avg_phi'] = np.mean(phis)
+            json_data['error_phi'] = (max(phis) - min(phis)) / 2 if len(phis) > 1 else 0
+            log.info(f"φ = {json_data['avg_phi']:.4f} ± {json_data['error_phi']:.4f}")
+        else:
+            log.warning(f"No se pudo calcular φ para N={N}")
 
-    out_df = pd.DataFrame(scanning_rates)
-    out_df.to_csv(output_file, sep=';', index=False)
-    log.info(f"Saved scanning rates to: {output_file}\n")
-    return out_df
+        # Calcular tiempos y scanning rate
+        times_files_list = [file_dict['times'] for file_dict in files]
+        
+        result = calculate_times(times_files_list)
+        
+        if result[0] is not None:
+            common_times, avg_accumulated, std_accumulated, Q, Q_error = result
+            
+            json_data['times'] = common_times.tolist()
+            json_data['accumulated_contacts'] = avg_accumulated.tolist()
+            json_data['std_contacts'] = std_accumulated.tolist()
+            json_data['scanning_rate'] = Q
+            json_data['scanning_rate_error'] = Q_error
+        else:
+            log.error(f"No se pudieron calcular tiempos para N={N}")
 
-def avg_scanning_rate(input_dir: str, output_dir: str, from_time: int = 22) -> pd.DataFrame:
-    """
-    Calcula el promedio de scanning rates agrupando por N.
-    Mantiene los mismos nombres de columnas que el DataFrame original.
-    """
-    log.info(f"Calculando promedio de scanning rates desde: {input_dir}\n")
+        final_data.append(json_data)
 
-    # Leer todos los archivos válidos del directorio
-    files = [f for f in os.listdir(input_dir) if f.endswith('.csv') or f.endswith('.txt')]
-    dfs = []
+    log.info("\n" + "="*60)
+    log.info("Finalizando el análisis de datos de las simulaciones...")
+    log.info("="*60)
 
-    for file in files:
-        file_path = os.path.join(input_dir, file)
-        log.info(f"Procesando archivo: {file_path}")
-        df = calculate_scanning_rate(file_path, output_file=output_dir + f"scanning_rates_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv", from_time=from_time)
-        if df is not None:
-            dfs.append(df)
+    return final_data
 
-    if not dfs:
-        log.warning("No se generaron DataFrames válidos.")
-        return None
+def plot_accumulated_contacts(final_data):
+    """Gráfico 1: Contactos acumulados promedio vs tiempo"""
+    plt.figure(figsize=(12, 8))
+    
+    for data in final_data:
+        N = data['N']
+        phi = data['avg_phi']
+        times = np.array(data['times'])
+        accumulated = np.array(data['accumulated_contacts'])
+        
+        plt.plot(times, accumulated, label=f"N={N} (φ={phi:.3f})")
+    
+    plt.xlabel('Tiempo (s)', fontsize=12)
+    plt.ylabel('Contactos acumulados promedio', fontsize=12)
+    plt.title('Promedio de contactos acumulados por segundo (varios N)', fontsize=14)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_GRAPH_DIR + 'accumulated_contacts.png', dpi=300, bbox_inches='tight')
+    #plt.show()
 
-    # Concatenar todos los resultados en un solo DataFrame
-    combined_df = pd.concat(dfs, ignore_index=True)
-
-    # Agrupar por N y calcular los promedios
-    avg_df = combined_df.groupby('N', as_index=False).agg({
-        'phi': 'mean',
-        'scanning_rate': 'mean',
-        'error_slope': 'mean'
-    })
-
-    # Guardar el resultado con los mismos headers
-    avg_df.to_csv(output_dir + f"avg_scanning_rates.csv", sep=';', index=False)
-    log.info(f"Promedios por N guardados en: {output_dir + f'avg_scanning_rates.csv'}")
-
-    return avg_df
-
-
-def graph_scanning_rate(df: pd.DataFrame, output_path: str):
-    """
-    Graph scanning rate from the DataFrame.
-    """
-    log.info("Graphing scanning rate.\n")
-
-    plt.figure()
-    for N in df['N'].unique():
-        subset = df[df['N'] == N]
-        plt.errorbar(subset['phi'], subset['scanning_rate'], yerr=subset['error_slope'], fmt='o', capsize=4, label=f'N={N}')
-
-    plt.xlabel('Phi')
-    plt.ylabel('Scanning Rate')
-    plt.legend()
-    plt.grid()
-    plt.savefig(output_path)
-    log.info(f"Saved scanning rate graph to: {output_path}\n")
-    plt.close()
+def plot_scanning_rate(final_data):
+    """Gráfico 2: Q vs φ con barras de error"""
+    plt.figure(figsize=(10, 6))
+    
+    phis = [data['avg_phi'] for data in final_data]
+    Qs = [data['scanning_rate'] for data in final_data]
+    Q_errors = [data['scanning_rate_error'] for data in final_data]
+    Ns = [data['N'] for data in final_data]
+    
+    plt.errorbar(phis, Qs, yerr=Q_errors, fmt='o-', capsize=5, markersize=8)
+    
+    # Agregar etiquetas de N en cada punto
+    for phi, Q, N in zip(phis, Qs, Ns):
+        plt.text(phi, Q, f'N{N}', fontsize=8, ha='right', va='bottom')
+    
+    plt.xlabel('Fracción de área ocupada φ', fontsize=12)
+    plt.ylabel('Scanning rate Q (contactos/s)', fontsize=12)
+    plt.title('Q vs φ (promedio de 5 realizaciones)', fontsize=14)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_GRAPH_DIR + 'scanning_rate_vs_phi.png', dpi=300, bbox_inches='tight')
+    #plt.show()
 
 if __name__ == "__main__":
-    log.info("Scanning rate module started.")
+    log.info("Módulo de análisis de Scanning Rate iniciado.")
 
-    if not os.path.exists("data/sim") or not os.path.exists("data/times"):
-        log.error("Error: Los directorios 'data/sim' y/o 'data/times' no existen.")
-        sys.exit(1) 
-    
-    if len(sys.argv) < 2:
-        log.error("Error: No se especificó una acción. Use --cumulativegraph o --scanningrate.")
-        sys.exit(1)
-
-    # create folders if not exist
-    os.makedirs(OUTPUT_FILE_DIR, exist_ok=True)
     os.makedirs(OUTPUT_GRAPH_DIR, exist_ok=True)
-
-
-
-    action = sys.argv[1]
+    os.makedirs(OUTPUT_FILE_DIR, exist_ok=True)
     
-    if action == '--cumulativegraph':
-        log.info("Acción seleccionada: Graficar tiempos acumulados.")
-        log.info("Calculando valores de phi y tiempos...")
-        file = calculate_phi_times("data/")
-        graph_cumulative_times(file)
-    elif action == '--scanningrate':
-        log.info("Acción seleccionada: Calcular y graficar scanning rate.")
-        ## modificar la entrada
-        df = avg_scanning_rate(OUTPUT_FILE_DIR, OUTPUT_FILE_DIR)
+    log.info("--- PASO 1: Procesando y agregando datos de todas las corridas ---")
 
-        log.debug(f"Scanning rates calculados:\n{df}\n")
-        graph_scanning_rate(df, OUTPUT_GRAPH_DIR + "scanning_rate_graph.png")
-    else:
-        log.error(f"Error: Acción desconocida '{action}'. Use --cumulativegraph o --scanningrate.")
-        sys.exit(1)
+    final_data = process_all_runs(BASE_DATA_DIR)
+    plot_accumulated_contacts(final_data)
+    plot_scanning_rate(final_data)
 
-    log.info("Scanning rate module finished.")
-
-
+    log.info("Módulo de análisis finalizado.")
