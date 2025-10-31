@@ -252,10 +252,10 @@ public class Simulation {
     private void printSimulation(List<Peaton> peatons, double currentTime){
         try {
             this.SIMULATION_WRITER.write(String.format("t=%.3f\n", currentTime));
-            this.SIMULATION_WRITER.write("id;x;y;r;vdx;vdy\n");
-            this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f;%.6f;%.6f\n", this.agenteCentral.getId(), this.agenteCentral.getPosition().getX(), this.agenteCentral.getPosition().getY(), this.agenteCentral.getRadius(), 0, 0));
+            this.SIMULATION_WRITER.write("id;x;y;r;vx;vy\n");
+            this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f;%.6f;%.6f\n", this.agenteCentral.getId(), this.agenteCentral.getPosition().getX(), this.agenteCentral.getPosition().getY(), this.agenteCentral.getRadius(), .0f, .0f));
             for(Peaton p : peatons)
-                this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f;%.6f;%.6f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius(), p.getDesiredVelocity().getX(), p.getDesiredVelocity().getY()));
+                this.SIMULATION_WRITER.write(String.format("%d;%.6f;%.6f;%.2f;%.6f;%.6f\n", p.getId(), p.getPosition().getX(), p.getPosition().getY(), p.getRadius(), p.getvelocity().getX(), p.getvelocity().getY()));
             
             this.SIMULATION_WRITER.flush();
         } catch (IOException e) {
