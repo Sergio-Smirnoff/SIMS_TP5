@@ -1,18 +1,17 @@
 package pedestrian;
 
 import java.util.Locale;
-
-import pedestrian.coreSimulation.Simulation;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import pedestrian.coreSimulation.Simulation;
+
 public class Main {
     public static void main(String[] args) {
         Locale.setDefault(Locale.US);
-        //defaultRun();
-        nRun();
+        defaultRun();
+        //nRun();
     }
 
     public static void defaultRun(){
@@ -21,7 +20,7 @@ public class Main {
     }
 
     public static void nRun(){
-        double desiredVelocity = 1.7;
+        double desiredVelocity = 2.5;
         double dt = 0.0001;
         double totalTime = 100;
         double L = 6.0;
@@ -36,7 +35,7 @@ public class Main {
         long startTime = System.currentTimeMillis();
         System.out.println("Submitting simulation tasks...");
 
-        for (int nPeatons = 9; nPeatons <= 200; nPeatons += 10) {
+        for (int nPeatons = 44; nPeatons <= 84; nPeatons += 10) {
             for (int i = 0; i < runs_per_N; i++) {
                 final int currentN = nPeatons;
                 final int runId = i+nPeatons;
