@@ -15,11 +15,13 @@ public class Beeman implements Integrator {
         if (x < 0 || x >= L) {
             x = x - L * Math.floor(x / L); 
             peaton.setCollisionTime(null);
+            peaton.setHasCollided(false);
         }
         
         if (y < 0 || y >= L) {
             y = y - L * Math.floor(y / L);
             peaton.setCollisionTime(null);
+            peaton.setHasCollided(false);
         }
 
         return new Vector2D(x, y);

@@ -24,7 +24,7 @@ public class Main {
         double dt = 0.0001;
         double totalTime = 100;
         double L = 6.0;
-        int runs_per_N = 10;
+        int runs_per_N = 1;
 
 
         int availableProcessors = Runtime.getRuntime().availableProcessors();
@@ -35,7 +35,7 @@ public class Main {
         long startTime = System.currentTimeMillis();
         System.out.println("Submitting simulation tasks...");
 
-        for (int nPeatons = 72; nPeatons <= 72; nPeatons += 1) {
+        for (int nPeatons = 220; nPeatons <= 220; nPeatons += 1) {
             for (int i = 0; i < runs_per_N; i++) {
                 final int currentN = nPeatons;
                 final int runId = i+nPeatons;

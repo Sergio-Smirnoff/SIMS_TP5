@@ -25,6 +25,7 @@ public class Peaton {
 
     // Unique collision with middle particle
     private Double collisionTime;
+    private boolean hasCollided;
 
     public Peaton(int id, Vector2D position, Vector2D desiredVelocity, double radius, double mass, double characteristicTime) {
         this.id = id;
@@ -38,6 +39,7 @@ public class Peaton {
         this.resultantForce = new Vector2D(0.0, 0.0);
         this.characteristicTime = characteristicTime;
         this.collisionTime = null;
+        this.hasCollided = false;
     }
 
     // for agente central, todo: check how to handle target
@@ -58,6 +60,10 @@ public class Peaton {
     public Vector2D getDesiredVelocity() { return desiredVelocity; };
     public Vector2D getResultantForce() { return resultantForce; }
 
+    public boolean getHasCollided(){
+        return hasCollided;
+    }
+
     public void setPosition(Vector2D nuevaposition) { this.position = nuevaposition; }
     public void setVelocity(Vector2D nuevavelocity) { this.velocity = nuevavelocity; }
     
@@ -66,6 +72,9 @@ public class Peaton {
 
     public void setCollisionTime(Double time){
         this.collisionTime = time;
+    }
+    public void setHasCollided(boolean hasCollided){
+        this.hasCollided = hasCollided;
     }
 
     @Override
@@ -115,7 +124,7 @@ public class Peaton {
             if(collisionTime == null && other.id == idAC){
                 collisionTime = time;
                 colls.add(time);
-
+                hasCollided = true;
             }
         }
 
