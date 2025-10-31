@@ -55,6 +55,15 @@ def create_animation(file_path: str, save_animation: bool = False):
         ax.add_patch(circle)
         circles.append(circle)
     
+    X_init = np.zeros(N)
+    Y_init = np.zeros(N)
+    U_init = np.zeros(N)
+    V_init = np.zeros(N)
+    quiver = ax.quiver(X_init, Y_init, U_init, V_init,
+                        color='black', units='xy', scale=1,
+                        alpha=0.8)
+    
+
     time_text = ax.text(0.02, 0.98, '', transform=ax.transAxes, 
                         verticalalignment='top', fontsize=12,
                         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
@@ -63,25 +72,36 @@ def create_animation(file_path: str, save_animation: bool = False):
         for circle in circles:
             circle.center = (0, 0)
             circle.set_radius(0)
+        
+        quiver.set_offsets(np.column_stack([X_init, Y_init]))
+        quiver.set_UVC(U_init, V_init)
+
         time_text.set_text('')
-        return circles + [time_text]
+        return circles + [quiver, time_text]
     
     if save_animation:
         def update(frame_num):
             if frame_num >= len(all_data):
-                return circles + [time_text]
+                return circles + [quiver, time_text]
             
             df = all_data[frame_num]
             t = df['t'].iloc[0]
             log.info(f"Rendering frame {frame_num + 1}/{len(all_data)} (t={t})")
-            
+
+            positions = df[['x', 'y']].values
+            radii = df['r'].values
+            vectors = df[['vx', 'vy']].values
+
             for i, (_, row) in enumerate(df.iterrows()):
-                circles[i].center = (row['x'], row['y'])
-                circles[i].set_radius(row['r'])
+                circles[i].center = positions[i]
+                circles[i].set_radius(radii[i])
             
+            quiver.set_offsets(positions)
+            quiver.set_UVC(vectors[:, 0], vectors[:, 1])
+
             time_text.set_text(f't = {t:.2f}')
             
-            return circles + [time_text]
+            return circles + [quiver, time_text]
         
         anim = FuncAnimation(
             fig, 
@@ -108,13 +128,20 @@ def create_animation(file_path: str, save_animation: bool = False):
             t = df['t'].iloc[0]
             log.info(f"Animating timestep t={t}")
             
+            positions = df[['x', 'y']].values
+            radii = df['r'].values
+
+            vectors = df[['vx', 'vy']].values
+
             for i, (_, row) in enumerate(df.iterrows()):
-                circles[i].center = (row['x'], row['y'])
-                circles[i].set_radius(row['r'])
+                circles[i].center = positions[i]
+                circles[i].set_radius(radii[i])
             
+            quiver.set_offsets(positions)
+            quiver.set_UVC(vectors[:, 0], vectors[:, 1])
             time_text.set_text(f't = {t:.2f}')
             
-            return circles + [time_text]
+            return circles + [quiver, time_text]
         
         anim = FuncAnimation(
             fig, 

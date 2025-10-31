@@ -30,7 +30,7 @@ public class Simulation {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());;
 
     // sim params por ahora son inventados :)
-    private static int N_PEATONES = 310;
+    private static int N_PEATONES = 219;
     private static final double MASS = 80.0;
     private static double DESIRED_VELOCITY = 1.7;
     private static final double CHARACTERISTIC_TIME = 0.5;

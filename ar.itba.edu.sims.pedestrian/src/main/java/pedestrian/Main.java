@@ -1,12 +1,11 @@
 package pedestrian;
 
 import java.util.Locale;
-
-import pedestrian.coreSimulation.Simulation;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import pedestrian.coreSimulation.Simulation;
 
 public class Main {
     public static void main(String[] args) {
