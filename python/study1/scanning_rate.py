@@ -22,9 +22,9 @@ log.basicConfig(
 )
 
 # --- Directorios de Entrada y Salida ---
-BASE_DATA_DIR = "data/"
-OUTPUT_GRAPH_DIR = "output/study1/graphs/"
-OUTPUT_FILE_DIR = "output/study1/data/"
+BASE_DATA_DIR = "data\\"
+OUTPUT_GRAPH_DIR = "output\\study1\\graphs\\"
+OUTPUT_FILE_DIR = "output\\study1\\data\\"
 
 def separate_files(sim_dir: str, times_dir: str):
     """
