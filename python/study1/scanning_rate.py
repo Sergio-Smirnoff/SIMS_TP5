@@ -35,6 +35,10 @@ FROM_TIME_MAP = {
     214: 0, 220: 0
 }
 
+plt.rcParams['axes.labelsize']=16
+plt.rcParams['xtick.labelsize']=20
+plt.rcParams['ytick.labelsize']=20
+
 def separate_files(sim_dir: str, times_dir: str):
     """
 
@@ -307,24 +311,39 @@ def process_all_runs(base_dir: str) -> dict:
     return final_data
 
 def plot_accumulated_contacts(final_data):
-    """Gráfico 1: Contactos acumulados promedio vs tiempo"""
+    """Gráfico 1: Contactos acumulados promedio vs tiempo para N específicos."""
     plt.figure(figsize=(12, 8))
 
-    for data in final_data:
+    # --- WORLD-CLASS FIX: Define the specific N values to plot ---
+    target_Ns = {9, 72, 219}  # Using a set for efficient lookup is a best practice.
+
+    # Filter the data first to make the loop cleaner and more explicit
+    filtered_data = [data for data in final_data if data['N'] in target_Ns]
+
+    if not filtered_data:
+        log.warning(f"No se encontraron datos para los N especificados: {target_Ns}. No se generará el gráfico.")
+        plt.close() # Close the empty figure to save memory
+        return
+
+    for data in filtered_data:
         N = data['N']
         phi = data['avg_phi']
         times = np.array(data['times'])
         accumulated = np.array(data['accumulated_contacts'])
 
-        plt.plot(times, accumulated, label=f"N={N} (φ={phi:.3f})")
+        plt.plot(times, accumulated, label=f"N={N}")
 
-    plt.xlabel('Tiempo (s)', fontsize=12)
-    plt.ylabel('Contactos acumulados promedio', fontsize=12)
-    plt.title('Promedio de contactos acumulados por segundo (varios N)', fontsize=14)
+    # --- Code Quality Suggestion: Add a descriptive title ---
+    plt.xlabel('Tiempo (s)')
+    plt.ylabel('Contactos acumulados promedio')
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(OUTPUT_GRAPH_DIR + 'accumulated_contacts.png', dpi=300, bbox_inches='tight')
+
+    # --- Code Quality Suggestion: Use a more specific filename to avoid overwriting ---
+    output_filename = f'accumulated_contacts_N_{"_".join(map(str, sorted(target_Ns)))}.png'
+    plt.savefig(os.path.join(OUTPUT_GRAPH_DIR, output_filename), dpi=300, bbox_inches='tight')
+    log.info(f"Gráfico de contactos acumulados filtrado guardado en: {output_filename}")
     #plt.show()
 
 def plot_scanning_rate(final_data):
@@ -338,13 +357,8 @@ def plot_scanning_rate(final_data):
 
     plt.errorbar(phis, Qs, yerr=Q_errors, fmt='o-', capsize=5, markersize=8)
 
-    # Agregar etiquetas de N en cada punto
-    for phi, Q, N in zip(phis, Qs, Ns):
-        plt.text(phi, Q, f'N{N}', fontsize=8, ha='right', va='bottom')
-
-    plt.xlabel('Fracción de área ocupada φ', fontsize=12)
-    plt.ylabel('Scanning rate Q (contactos/s)', fontsize=12)
-    plt.title('Q vs φ (promedio de 5 realizaciones)', fontsize=14)
+    plt.xlabel('Fracción de área ocupada φ')
+    plt.ylabel('Scanning rate Q (contactos/s)')
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig(OUTPUT_GRAPH_DIR + 'scanning_rate_vs_phi.png', dpi=300, bbox_inches='tight')
