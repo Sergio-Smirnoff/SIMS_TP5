@@ -36,7 +36,7 @@ public class Main {
         long startTime = System.currentTimeMillis();
         System.out.println("Submitting simulation tasks...");
 
-        for (int nPeatons = 9; nPeatons <= 200; nPeatons += 10) {
+        for (int nPeatons = 72; nPeatons <= 72; nPeatons += 1) {
             for (int i = 0; i < runs_per_N; i++) {
                 final int currentN = nPeatons;
                 final int runId = i+nPeatons;
