@@ -6,6 +6,8 @@
 
 \usepackage{graphicx}
 \usepackage{animate}
+\usepackage{bm}
+\usepackage{graphicx}
 
 % Datos
 \title{Dinámica Peatonal: Caminata al Azar}
@@ -59,17 +61,36 @@
 
   \subsection{Sistema Real}
   \begin{frame}{Sistema Real}
-    
+
   \end{frame}
 
   \subsection{Modelo Matemático}
   \begin{frame}{Modelo Matemático}
-    
+    \begin{itemize}
+      \item Función de Aceleración:
+      \vspace{0.2cm}
+      \\\( m_i\frac{d\mathbf{v}_i}{dt}=\mathbf{f}_{ap}+\sum_{j\ne i}{\mathbf{f}_{ij}}\)
+      \vspace{0.5cm}
+      \item Fuerza de Interacción:
+      \vspace{0.1cm}
+      \\\(\mathbf{f}_{ij}=\textit{k}_ng(r_{ij}-d_{ij})\mathbf{n}_{ij}+\textit{k}_tg(r_{ij}-d_{ij})\Delta \textit{v}^t_{ji}\mathbf{t}_{ij}\)
+      \vspace{0.2cm}
+      \\donde \( g(x)=\begin{cases}
+                        0 & d_{ij} \ge r_{ij} \\
+                        x & d_{ij} < r_{ij}
+      \end{cases}\)
+      \vspace{0.5cm}
+      \item Fuerza Autopropulsora:
+      \vspace{0.2cm}
+      \\\(\mathbf{f}_{ap} = m_i\frac{v^0_i\mathbf{e}^0_i(t)-\mathbf{v}_i(t)}{\tau_i}\)
+      \vspace{0.2cm}
+      \\donde \(v^0\) es la velocidad deseada
+    \end{itemize}
   \end{frame}
 
 % ------------------ Implementación ------------------
 
-\section{Implementación}
+  \section{Implementación}
   \begin{frame}
     \centering
     \colorbox{green!20!gray!30}{%
@@ -82,13 +103,34 @@
     }
   \end{frame}
 
-  \begin{frame}{Implementación}
-      
+  \subsection{Implementación}
+  \begin{frame}{UML}
+    \begin{columns}
+      \begin{column}{0.4\textwidth}
+        Clases:
+        \begin{itemize}
+          \item Peaton
+          \item Simulation
+          \item CellIndexMethod
+          \item Integrator
+        \end{itemize}
+      \end{column}
+
+      \begin{column}{0.6\textwidth}
+        \begin{figure}
+          \centering
+          \includegraphics[width=0.95\linewidth]{imagen/uml.jpeg}
+          \label{fig:placeholder}
+        \end{figure}
+        \vspace{0.2cm}
+      \end{column}
+    \end{columns}
   \end{frame}
+
 
 % ------------------ Simulaciones ------------------
 
-\section{Simulaciones}
+  \section{Simulaciones}
   \begin{frame}
     \centering
     \colorbox{green!20!gray!30}{%
@@ -101,19 +143,49 @@
     }
   \end{frame}
 
-    \subsection{Geometría del Sistema}
+  \subsection{Geometría del Sistema}
   \begin{frame}{Geometría del Sistema}
-    
+
+    \begin{columns}
+      \begin{column}{0.3\textwidth}
+        \begin{itemize}
+          \item \(L=6.0m\)
+          \vspace{0.3cm}
+          \item \(N\in[10,220]\)
+          \vspace{0.3cm}
+          \item \(v^0=1.7\frac{m}{s}\)
+          \vspace{0.3cm}
+          \item \(dt=0.0001s\)
+        \end{itemize}
+      \end{column}
+
+      \begin{column}{0.4\textwidth}
+        \begin{itemize}
+          \item \(\tau=0.5s\)
+          \vspace{0.3cm}
+          \item \(\textit{k}_n=1.2\cdot10^5\frac{kg}{s^2}\)
+          \vspace{0.3cm}
+          \item \(\textit{k}_t=2.4\cdot10^5\frac{kg}{ms}\)
+        \end{itemize}
+      \end{column}
+    \end{columns}
+
   \end{frame}
 
   \subsection{Definición de Observables}
   \begin{frame}{Definición de Observables}
-    
+    \begin{itemize}
+      \item \(\phi=\frac{\sum^N_i{\pi \cdot r^2_i}}{L^2}\)
+      \vspace{0.3cm}
+      \item \(Q=\frac{dN(t)}{dt}\), donde \(N(t)=cant. contactos\ únicos\)
+      \vspace{0.3cm}
+      \item \(\bm{\tau}_i=t_{i+1}-t_i\)
+    \end{itemize}
   \end{frame}
 
   % ------------------ Resultados ------------------
 
-\section{Resultados}
+  \section{Resultados}
   \begin{frame}
     \centering
     \colorbox{green!20!gray!30}{%
@@ -126,35 +198,46 @@
     }
   \end{frame}
 
-    \subsection{Contactos Únicos con Agente Fijo}
+  \subsection{Animaciones}
+  \begin{frame}{Animaciones}
+    poner para N=pico y N=220
+  \end{frame}
+
+  \subsection{Contactos Únicos con Agente Fijo}
   \begin{frame}{Estudio: Contactos Únicos con Agente Fijo}
-    
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/accumulated_contacts.png}
+      \label{fig:placeholder}
+    \end{figure}
   \end{frame}
 
   \subsection{Scanning Rate}
   \begin{frame}{Estudio: Scanning Rate}
-    
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/scanning_rate_vs_phi.png}
+      \label{fig:placeholder}
+    \end{figure}
   \end{frame}
 
   \subsection{Intervalo de Tiempo entre Contactos}
   \begin{frame}{Estudio: Intervalo de Tiempo entre Contactos}
-    
+
   \end{frame}
 
   \subsection{Ley de Potencias}
-  \subsubsection{Exponente}
   \begin{frame}{Estudio: Exponente de la Ley de Potencias}
-    
-  \end{frame}
-
-  \subsubsection{Incerteza}
-  \begin{frame}{Estudio: Incerteza del Exponente de la Ley de Potencias}
-    
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/alpha_vs_phi_clauset.png}
+      \label{fig:placeholder}
+    \end{figure}
   \end{frame}
 
   % ------------------ Conclusiones ------------------
 
-\section{Conclusiones}
+  \section{Conclusiones}
   \begin{frame}
     \centering
     \colorbox{green!20!gray!30}{%
@@ -168,7 +251,7 @@
   \end{frame}
 
   \begin{frame}{Conclusiones}
-      
+
   \end{frame}
 
 

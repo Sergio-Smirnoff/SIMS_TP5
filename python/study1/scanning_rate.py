@@ -5,6 +5,7 @@ from pathlib import Path
 import ast
 from collections import defaultdict
 from scipy import stats
+import json  # <-- 1. IMPORT JSON
 
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
@@ -36,7 +37,7 @@ FROM_TIME_MAP = {
 
 def separate_files(sim_dir: str, times_dir: str):
     """
-    
+
     """
     N_files = {}
 
@@ -72,12 +73,12 @@ def separate_files(sim_dir: str, times_dir: str):
 def calculate_times(times_files, max_time=None, transient_fraction=0.3):
     """
     Calcula los tiempos promediados y acumulados de múltiples realizaciones.
-    
+
     Args:
         times_files: Lista de archivos con tiempos de contacto
         max_time: Tiempo máximo común para interpolar (si None, usa el mínimo)
         transient_fraction: Fracción del tiempo total considerada como transitorio
-    
+
     Returns:
         common_times: Array con tiempos comunes
         avg_accumulated: Array con contactos acumulados promediados
@@ -250,10 +251,10 @@ def process_all_runs(base_dir: str) -> dict:
             "times": [],
             "accumulated_contacts": [],
             "std_contacts": [],
-            "scanning_rate": 0,
-            "scanning_rate_error": 0,
-            "avg_phi": 0,
-            "error_phi": 0
+            "scanning_rate": 0.0,
+            "scanning_rate_error": 0.0,
+            "avg_phi": 0.0,
+            "error_phi": 0.0
         }
 
         # Calcular φ
@@ -273,8 +274,9 @@ def process_all_runs(base_dir: str) -> dict:
                 continue
 
         if len(phis) > 0:
-            json_data['avg_phi'] = np.mean(phis)
-            json_data['error_phi'] = (max(phis) - min(phis)) / 2 if len(phis) > 1 else 0
+            # <-- 3. CORRECCIÓN: Convertir a float estándar para JSON
+            json_data['avg_phi'] = float(np.mean(phis))
+            json_data['error_phi'] = float((max(phis) - min(phis)) / 2) if len(phis) > 1 else 0.0
             log.info(f"φ = {json_data['avg_phi']:.4f} ± {json_data['error_phi']:.4f}")
         else:
             log.warning(f"No se pudo calcular φ para N={N}")
@@ -290,8 +292,9 @@ def process_all_runs(base_dir: str) -> dict:
             json_data['times'] = common_times.tolist()
             json_data['accumulated_contacts'] = avg_accumulated.tolist()
             json_data['std_contacts'] = std_accumulated.tolist()
-            json_data['scanning_rate'] = Q
-            json_data['scanning_rate_error'] = Q_error
+            # <-- 3. CORRECCIÓN: Convertir a float estándar para JSON
+            json_data['scanning_rate'] = float(Q)
+            json_data['scanning_rate_error'] = float(Q_error)
         else:
             log.error(f"No se pudieron calcular tiempos para N={N}")
 
@@ -354,8 +357,20 @@ if __name__ == "__main__":
     os.makedirs(OUTPUT_FILE_DIR, exist_ok=True)
 
     log.info("--- PASO 1: Procesando y agregando datos de todas las corridas ---")
-
     final_data = process_all_runs(BASE_DATA_DIR)
+
+    # --- 2. CÓDIGO AÑADIDO: GUARDAR JSON ---
+    output_json_path = OUTPUT_FILE_DIR + "analysis_results.json"
+    log.info(f"Guardando datos procesados en {output_json_path}")
+    try:
+        with open(output_json_path, 'w') as f:
+            json.dump(final_data, f, indent=4)
+        log.info("Datos JSON guardados exitosamente.")
+    except Exception as e:
+        log.error(f"No se pudo guardar el archivo JSON: {e}")
+    # --- FIN DE CÓDIGO AÑADIDO ---
+
+    log.info("--- PASO 2: Generando gráficos ---")
     plot_accumulated_contacts(final_data)
     plot_scanning_rate(final_data)
 
