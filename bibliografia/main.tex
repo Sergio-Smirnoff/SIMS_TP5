@@ -59,15 +59,10 @@
     }
   \end{frame}
 
-  \subsection{Sistema Real}
-  \begin{frame}{Sistema Real}
-
-  \end{frame}
-
   \subsection{Modelo Matemático}
   \begin{frame}{Modelo Matemático}
     \begin{itemize}
-      \item Función de Aceleración:
+      \item Ecuación de Movimiento:
       \vspace{0.2cm}
       \\\( m_i\frac{d\mathbf{v}_i}{dt}=\mathbf{f}_{ap}+\sum_{j\ne i}{\mathbf{f}_{ij}}\)
       \vspace{0.5cm}
@@ -84,7 +79,7 @@
       \vspace{0.2cm}
       \\\(\mathbf{f}_{ap} = m_i\frac{v^0_i\mathbf{e}^0_i(t)-\mathbf{v}_i(t)}{\tau_i}\)
       \vspace{0.2cm}
-      \\donde \(v^0\) es la velocidad deseada
+      \\donde \(v^0\) es la velocidad deseada y \(\tau_i\) el tiempo característico
     \end{itemize}
   \end{frame}
 
@@ -147,26 +142,31 @@
   \begin{frame}{Geometría del Sistema}
 
     \begin{columns}
-      \begin{column}{0.3\textwidth}
+      \begin{column}{0.4\textwidth}
+        %FOTO SISTEMA (ANIMACIÓN)
         \begin{itemize}
           \item \(L=6.0m\)
-          \vspace{0.3cm}
+          \vspace{0.2cm}
           \item \(N\in[10,220]\)
-          \vspace{0.3cm}
+          \vspace{0.2cm}
           \item \(v^0=1.7\frac{m}{s}\)
-          \vspace{0.3cm}
+          \vspace{0.2cm}
           \item \(dt=0.0001s\)
+          \vspace{0.2cm}
+          \item \(\tau=0.5s\)(tiempo característico)
+          \vspace{0.2cm}
+          \item \(\textit{k}_n=1.2\cdot10^5\frac{kg}{s^2}\)
+          \vspace{0.2cm}
+          \item \(\textit{k}_t=2.4\cdot10^5\frac{kg}{ms}\)
         \end{itemize}
       \end{column}
 
-      \begin{column}{0.4\textwidth}
-        \begin{itemize}
-          \item \(\tau=0.5s\)
-          \vspace{0.3cm}
-          \item \(\textit{k}_n=1.2\cdot10^5\frac{kg}{s^2}\)
-          \vspace{0.3cm}
-          \item \(\textit{k}_t=2.4\cdot10^5\frac{kg}{ms}\)
-        \end{itemize}
+      \begin{column}{0.6\textwidth}
+        \begin{figure}
+          \centering
+          \includegraphics[width=1\linewidth]{imagen/image.png}
+          \label{fig:placeholder}
+        \end{figure}
       \end{column}
     \end{columns}
 
@@ -176,10 +176,18 @@
   \begin{frame}{Definición de Observables}
     \begin{itemize}
       \item \(\phi=\frac{\sum^N_i{\pi \cdot r^2_i}}{L^2}\)
-      \vspace{0.3cm}
-      \item \(Q=\frac{dN(t)}{dt}\), donde \(N(t)=cant. contactos\ únicos\)
-      \vspace{0.3cm}
-      \item \(\bm{\tau}_i=t_{i+1}-t_i\)
+      \vspace{0.5cm}
+      \item \(Q_{\text{prom}} = \langle Q \rangle_{10\,\text{corridas}} \pm \sigma(Q)\)
+      \vspace{0.2cm}
+      \\\(Q=\frac{dN(t)}{dt}\)
+      \vspace{0.2cm}
+      \\ \(N(t)=cant. contactos\ únicos\)
+      % ACLARAR QUE Q ES EL PROMEDIO DE 10 CORRIDAS
+      \vspace{0.5cm}
+      \item \(\text{CDSF}(\bm{\tau}) = P(T \ge \bm{\tau}) = 1 - F(\bm{\tau})\)
+      \vspace{0.1cm}
+      \\ \(\bm{\tau}_i=t_{i+1}-t_i\)
+      % NUEVO ITEM AJUSTE DE ALPHA EXPLICACIÓN BREVE
     \end{itemize}
   \end{frame}
 
@@ -200,20 +208,19 @@
 
   \subsection{Animaciones}
   \begin{frame}{Animaciones}
-    poner para N=pico y N=220
   \end{frame}
 
   \subsection{Contactos Únicos con Agente Fijo}
-  \begin{frame}{Estudio: Contactos Únicos con Agente Fijo}
+  \begin{frame}{Contactos Únicos con Agente Fijo}
     \begin{figure}
       \centering
-      \includegraphics[width=1\linewidth]{imagen/accumulated_contacts.png}
+      \includegraphics[width=1\linewidth]{imagen/accumulated_contacts_N_9_72_219.png}
       \label{fig:placeholder}
     \end{figure}
   \end{frame}
 
   \subsection{Scanning Rate}
-  \begin{frame}{Estudio: Scanning Rate}
+  \begin{frame}{canning Rate}
     \begin{figure}
       \centering
       \includegraphics[width=1\linewidth]{imagen/scanning_rate_vs_phi.png}
@@ -222,21 +229,159 @@
   \end{frame}
 
   \subsection{Intervalo de Tiempo entre Contactos}
-  \begin{frame}{Estudio: Intervalo de Tiempo entre Contactos}
 
-  \end{frame}
-
-  \subsection{Ley de Potencias}
-  \begin{frame}{Estudio: Exponente de la Ley de Potencias}
+  \begin{frame}{Aproximación Power Law}
     \begin{figure}
       \centering
-      \includegraphics[width=1\linewidth]{imagen/alpha_vs_phi_clauset.png}
+      \includegraphics[width=1\linewidth]{imagen/distribution_N63.png}
+      \label{fig:placeholder}
+    \end{figure}
+  \end{frame}
+
+  \begin{frame}{Aproximación Exponencial}
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/distribution_N72.png}
+      \label{fig:placeholder}
+    \end{figure}
+  \end{frame}
+
+  \begin{frame}{Aproximación Logarítmica}
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/distribution_N219.png}
+      \label{fig:placeholder}
+    \end{figure}
+  \end{frame}
+
+  \subsection{Exponentes Aproximaciones}
+  \begin{frame}{Exponente de la Ley de Potencias}
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/exppowerlaw.jpeg}
+      \label{fig:placeholder}
+    \end{figure}
+  \end{frame}
+
+  \begin{frame}{Exponente de Exponencial}
+    \begin{figure}
+      \centering
+      \includegraphics[width=1\linewidth]{imagen/expvsdens.jpeg}
       \label{fig:placeholder}
     \end{figure}
   \end{frame}
 
   % ------------------ Conclusiones ------------------
 
+
+  % ------------------ Resultados N=389 ------------------
+
+  \section{Resultados}
+  \begin{frame}
+    \centering
+    \colorbox{green!20!gray!30}{%
+      \begin{minipage}{0.85\textwidth}
+        \centering
+        \vspace{0.5cm}
+        {\Large\ Resultados}
+        \vspace{0.5cm}
+      \end{minipage}
+    }
+  \end{frame}
+
+  \subsection{Animaciones}
+  \begin{frame}{Animaciones}
+  \end{frame}
+
+  \subsection{Contactos Únicos con Agente Fijo}
+  \begin{frame}{Contactos Únicos con Agente Fijo}
+
+  \end{frame}
+
+  \subsection{Scanning Rate}
+  \begin{frame}{canning Rate}
+
+  \end{frame}
+
+  \subsection{Intervalo de Tiempo entre Contactos}
+
+  \begin{frame}{Aproximación Power Law}
+
+  \end{frame}
+
+  \begin{frame}{Aproximación Exponencial}
+
+  \end{frame}
+
+  \begin{frame}{Aproximación Logarítmica}
+
+  \end{frame}
+
+  \subsection{Exponentes Aproximaciones}
+  \begin{frame}{Exponente de la Ley de Potencias}
+
+  \end{frame}
+
+  \begin{frame}{Exponente de Exponencial}
+
+  \end{frame}
+
+  % ------------------ Resultados L=8 ------------------
+
+  \section{Resultados}
+  \begin{frame}
+    \centering
+    \colorbox{green!20!gray!30}{%
+      \begin{minipage}{0.85\textwidth}
+        \centering
+        \vspace{0.5cm}
+        {\Large\ Resultados}
+        \vspace{0.5cm}
+      \end{minipage}
+    }
+  \end{frame}
+
+  \subsection{Animaciones}
+  \begin{frame}{Animaciones}
+  \end{frame}
+
+  \subsection{Contactos Únicos con Agente Fijo}
+  \begin{frame}{Contactos Únicos con Agente Fijo}
+
+  \end{frame}
+
+  \subsection{Scanning Rate}
+  \begin{frame}{canning Rate}
+
+  \end{frame}
+
+  \subsection{Intervalo de Tiempo entre Contactos}
+
+  \begin{frame}{Aproximación Power Law}
+
+  \end{frame}
+
+  \begin{frame}{Aproximación Exponencial}
+
+  \end{frame}
+
+  \begin{frame}{Aproximación Logarítmica}
+
+  \end{frame}
+
+  \subsection{Exponentes Aproximaciones}
+  \begin{frame}{Exponente de la Ley de Potencias}
+
+  \end{frame}
+
+  \begin{frame}{Exponente de Exponencial}
+
+  \end{frame}
+
+
+
+
+  % ------------------ Conclusiones ------------------
   \section{Conclusiones}
   \begin{frame}
     \centering
