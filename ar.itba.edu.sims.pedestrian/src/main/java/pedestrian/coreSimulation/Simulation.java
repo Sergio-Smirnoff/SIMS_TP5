@@ -62,14 +62,14 @@ public class Simulation {
         this.cim = new CellIndexMethod(L, RC_INTERACTION);
         this.colls = new ArrayList<>();
         try {
-            String sim_filename = String.format("simulation_N%d_L%.1f_TT%.1f_run%d.csv", N_PEATONES, L, TOTAL_TIME, run_id);
-            String time_filename = String.format("times_N%d_L%.1f_TT%.1f_run%d.csv", N_PEATONES, L, TOTAL_TIME, run_id);
+            String sim_filename = String.format("../python/data/sim/simulation_N%d_L%.1f_TT%.1f_run%d.csv", N_PEATONES, L, TOTAL_TIME, run_id);
+            String time_filename = String.format("../python/data/times/times_N%d_L%.1f_TT%.1f_run%d.csv", N_PEATONES, L, TOTAL_TIME, run_id);
 
             this.SIMULATION_WRITER = new FileWriter(sim_filename);
             this.TIME_WRITER = new FileWriter(time_filename);
 
         } catch (IOException ex) {
-            throw new Error("Bryat");
+            throw new Error(ex);
         }
     }
 
