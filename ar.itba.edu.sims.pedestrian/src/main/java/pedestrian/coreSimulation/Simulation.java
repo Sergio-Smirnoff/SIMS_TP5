@@ -73,6 +73,26 @@ public class Simulation {
         }
     }
 
+    public Simulation( int nPeatons, double desiredVelocity, double dt, double totalTime, double L, int iteration ) {
+        N_PEATONES = nPeatons;
+        DESIRED_VELOCITY = desiredVelocity;
+        DT = dt;
+        TOTAL_TIME = totalTime;
+        Simulation.L = L;
+        this.random = new Random();
+        this.agenteCentral = new Peaton(ID_AGENTE_CENTRAL, new Vector2D(L / 2.0, L / 2.0), R_FIJO, MASS);
+        initializeParticlesOnHexGrid();
+        this.integrator = new Beeman();
+        this.cim = new CellIndexMethod(L, RC_INTERACTION);
+        this.colls = new ArrayList<>();
+        try {
+            this.SIMULATION_WRITER = new FileWriter(String.format("simulation_N%d_L%.1f_TT%.1f_%d.csv", N_PEATONES, L, TOTAL_TIME, iteration));
+            this.TIME_WRITER = new FileWriter(String.format("times_N%d_L%.1f_TT%.1f_%d.csv", N_PEATONES, L, TOTAL_TIME, iteration));
+        } catch (IOException ex) {
+            throw new Error("Bryat");
+        }
+    }
+
     // Fijo al agente del medio, inicializa las particulas y crea el cell idx
     public Simulation() {
             this.random = new Random();
