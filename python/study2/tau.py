@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from output_reader import FileReader
+
 import json
 import os
 import fnmatch
@@ -11,9 +11,14 @@ import powerlaw
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
 
+from output_reader import FileReader
+
 # Configuración
 plt.rcParams['figure.figsize'] = (12, 8)
-plt.rcParams['font.size'] = 11
+plt.rcParams['font.size'] = 16
+plt.rcParams['axes.labelsize']=16
+plt.rcParams['xtick.labelsize']=16
+plt.rcParams['ytick.labelsize']=16
 
 def load_contact_times(data_dir, times_dir):
     """
