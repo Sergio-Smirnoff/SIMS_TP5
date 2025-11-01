@@ -361,7 +361,7 @@ def print_results_table(results, output_dir="output/study2"):
     print(table_str)
     print("\nGuardando tabla en:", output_path)
 
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("TABLA DE RESULTADOS - MÉTODO DE CLAUSET ET AL. 2009 (con p_boot)\n\n")
         f.write(table_str)
         f.write("\n")
