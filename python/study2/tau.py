@@ -26,7 +26,7 @@ def load_contact_times(data_dir, times_dir):
     """
     contact_times_by_N = {}
     
-    summary_file = os.path.join(data_dir, "scanning_rate_data.json")
+    summary_file = os.path.join(data_dir, "analysis_results.json")
     
     if not os.path.exists(summary_file):
         raise FileNotFoundError(f"No se encontró: {summary_file}")
