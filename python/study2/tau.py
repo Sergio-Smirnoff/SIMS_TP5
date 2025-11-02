@@ -72,7 +72,7 @@ def load_contact_times(data_dir, times_dir):
                 all_times.extend(contact_times.tolist())
                 
             except Exception as e:
-                print(f"\n   ⚠ Error en {os.path.basename(times_file)}: {e}")
+                print(f"\n Error en {os.path.basename(times_file)}: {e}")
                 continue
         
         if len(all_times) > 1:
@@ -105,22 +105,22 @@ def analyze_distribution(data, N, phi):
                                              normalized_ratio=True)
     
     # Comparar con lognormal
-    R_log, p_log = fit.distribution_compare('power_law', 'lognormal',
-                                             normalized_ratio=True)
+    #R_log, p_log = fit.distribution_compare('power_law', 'lognormal',
+                                             #normalized_ratio=True)
     
     # Determinar mejor distribución (umbral p < 0.05 para significancia)
     if p_exp > 0.05 and R_exp < 0:
         # Exponencial es mejor que power law
         best_dist = 'exponential'
         best_color = 'blue'
-    elif p_log > 0.05 and R_log < 0:
-        # Lognormal es mejor que power law
-        best_dist = 'lognormal'
-        best_color = 'green'
+    # elif p_log > 0.05 and R_log < 0:
+    #     # Lognormal es mejor que power law
+    #     best_dist = 'lognormal'
+    #     best_color = 'green'
     else:
         # Power law es la mejor (o no se puede distinguir)
         best_dist = 'power_law'
-        best_color = 'red'
+        best_color = 'green'
     
     result = {
         'N': N,
@@ -143,8 +143,6 @@ def analyze_distribution(data, N, phi):
         # Comparaciones
         'R_exp': R_exp,
         'p_exp': p_exp,
-        'R_log': R_log,
-        'p_log': p_log,
         
         # Datos
         'n_data': len(data),
@@ -175,8 +173,8 @@ def plot_individual_distributions(results, output_dir):
         r['fit'].exponential.plot_ccdf(ax=ax, color='blue', linestyle='--', 
                                        linewidth=2, label=f'Exponencial (λ={r["lambda"]:.3f})', alpha=0.7)
         
-        r['fit'].lognormal.plot_ccdf(ax=ax, color='green', linestyle='--', 
-                                     linewidth=2, label=f'Lognormal (μ={r["mu"]:.2f})', alpha=0.7)
+        #r['fit'].lognormal.plot_ccdf(ax=ax, color='green', linestyle='--', 
+                                     #linewidth=2, label=f'Lognormal (μ={r["mu"]:.2f})', alpha=0.7)
         
         # Resaltar la mejor distribución
         if r['best_dist'] == 'power_law':
@@ -188,18 +186,18 @@ def plot_individual_distributions(results, output_dir):
                                            linewidth=3.5, label='★ MEJOR AJUSTE: Exponencial', zorder=10)
             best_info = f'λ = {r["lambda"]:.4f}'
         else:  # lognormal
-            r['fit'].lognormal.plot_ccdf(ax=ax, color=r['best_color'], linestyle='-', 
-                                         linewidth=3.5, label='★ MEJOR AJUSTE: Lognormal', zorder=10)
-            best_info = f'μ = {r["mu"]:.3f}, σ = {r["lognormal_sigma"]:.3f}'
+            r['fit'].exponential.plot_ccdf(ax=ax, color=r['best_color'], linestyle='-', 
+                                           linewidth=3.5, label='★ MEJOR AJUSTE: Exponencial', zorder=10)
+            best_info = f'λ = {r["lambda"]:.4f}'
         
         # Título con información
         title = f'N = {r["N"]}, φ = {r["phi"]:.4f}\n'
         title += f'{best_info}\n'
         title += f'x_min = {r["xmin"]:.3f}, n_tail = {r["n_tail"]} / {r["n_data"]}'
         
-        ax.set_title(title, fontsize=13, fontweight='bold', pad=15)
+        #ax.set_title(title, fontsize=13, fontweight='bold', pad=15)
         ax.legend(loc='best', fontsize=10, framealpha=0.95)
-        ax.set_xlabel('τ (tiempo entre contactos) [s]', fontsize=12, fontweight='bold')
+        ax.set_xlabel('τ (s)', fontsize=12, fontweight='bold')
         ax.set_ylabel('P(X ≥ τ)', fontsize=12, fontweight='bold')
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.set_xscale('log')
@@ -241,15 +239,15 @@ def plot_parameters_vs_phi(results, output_dir):
         
         ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=13, fontweight='bold')
         ax.set_ylabel('Exponente α', fontsize=13, fontweight='bold')
-        ax.set_title('Exponente α de Power Law vs Densidad\n(Solo configuraciones donde Power Law es mejor)', 
-                    fontsize=14, fontweight='bold', pad=15)
+        #ax.set_title('Exponente α de Power Law vs Densidad\n(Solo configuraciones donde Power Law es mejor)', 
+                    #fontsize=14, fontweight='bold', pad=15)
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best', fontsize=11)
         ax.set_ylim(bottom=0)
         
         plt.tight_layout()
         plt.savefig(os.path.join(output_dir, 'alpha_vs_phi.png'), dpi=300, bbox_inches='tight')
-        plt.savefig(os.path.join(output_dir, 'alpha_vs_phi.pdf'), bbox_inches='tight')
+        #plt.savefig(os.path.join(output_dir, 'alpha_vs_phi.pdf'), bbox_inches='tight')
         plt.close()
         print(f"   ✓ Guardado: alpha_vs_phi.png")
     
@@ -268,15 +266,15 @@ def plot_parameters_vs_phi(results, output_dir):
         
         ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=13, fontweight='bold')
         ax.set_ylabel('Parámetro λ', fontsize=13, fontweight='bold')
-        ax.set_title('Parámetro λ de Exponencial vs Densidad\n(Solo configuraciones donde Exponencial es mejor)', 
-                    fontsize=14, fontweight='bold', pad=15)
+        #ax.set_title('Parámetro λ de Exponencial vs Densidad\n(Solo configuraciones donde Exponencial es mejor)', 
+                    #fontsize=14, fontweight='bold', pad=15)
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.legend(loc='best', fontsize=11)
         ax.set_ylim(bottom=0)
         
         plt.tight_layout()
         plt.savefig(os.path.join(output_dir, 'lambda_vs_phi.png'), dpi=300, bbox_inches='tight')
-        plt.savefig(os.path.join(output_dir, 'lambda_vs_phi.pdf'), bbox_inches='tight')
+        #plt.savefig(os.path.join(output_dir, 'lambda_vs_phi.pdf'), bbox_inches='tight')
         plt.close()
         print(f"   ✓ Guardado: lambda_vs_phi.png")
     
@@ -310,14 +308,14 @@ def plot_parameters_vs_phi(results, output_dir):
     
     ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=13, fontweight='bold')
     ax.set_ylabel('Parámetro característico', fontsize=13, fontweight='bold')
-    ax.set_title('Distribuciones Mejor Ajustadas vs Densidad\n(Clasificación según test de likelihood ratio)', 
-                fontsize=14, fontweight='bold', pad=15)
+    #ax.set_title('Distribuciones Mejor Ajustadas vs Densidad\n(Clasificación según test de likelihood ratio)', 
+                #fontsize=14, fontweight='bold', pad=15)
     ax.grid(True, alpha=0.3, linestyle='--')
     ax.legend(loc='best', fontsize=11, framealpha=0.95)
     
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, 'all_parameters_vs_phi.png'), dpi=300, bbox_inches='tight')
-    plt.savefig(os.path.join(output_dir, 'all_parameters_vs_phi.pdf'), bbox_inches='tight')
+    #plt.savefig(os.path.join(output_dir, 'all_parameters_vs_phi.pdf'), bbox_inches='tight')
     plt.close()
     print(f"   ✓ Guardado: all_parameters_vs_phi.png")
 
@@ -328,7 +326,7 @@ def print_summary_table(results):
     print("\n" + "="*120)
     print("TABLA RESUMEN DE ANÁLISIS")
     print("="*120)
-    print(f"\n{'N':>5} {'φ':>8} {'Mejor Dist.':>15} {'Parámetro':>25} {'p_exp':>8} {'p_log':>8}")
+    print(f"\n{'N':>5} {'φ':>8} {'Mejor Dist.':>15} {'Parámetro':>25} {'p_exp':>8}")
     print("-" * 120)
     
     for r in results:
@@ -337,22 +335,22 @@ def print_summary_table(results):
         elif r['best_dist'] == 'exponential':
             param_str = f"λ = {r['lambda']:.4f}"
         else:
-            param_str = f"μ = {r['mu']:.3f}, σ = {r['lognormal_sigma']:.3f}"
+            param_str = f"α = {r['alpha']:.3f} ± {r['alpha_sigma']:.3f}"
         
         print(f"{r['N']:5d} {r['phi']:8.4f} {r['best_dist']:>15} {param_str:>25} "
-              f"{r['p_exp']:8.4f} {r['p_log']:8.4f}")
+              f"{r['p_exp']:8.4f}")
     
     print("="*120)
     
     # Estadísticas
     n_pl = sum(1 for r in results if r['best_dist'] == 'power_law')
     n_exp = sum(1 for r in results if r['best_dist'] == 'exponential')
-    n_log = sum(1 for r in results if r['best_dist'] == 'lognormal')
+    #n_log = sum(1 for r in results if r['best_dist'] == 'lognormal')
     
     print(f"\nRESUMEN:")
     print(f"  Power Law:    {n_pl:2d} / {len(results)} ({100*n_pl/len(results):.1f}%)")
     print(f"  Exponencial:  {n_exp:2d} / {len(results)} ({100*n_exp/len(results):.1f}%)")
-    print(f"  Lognormal:    {n_log:2d} / {len(results)} ({100*n_log/len(results):.1f}%)")
+    #print(f"  Lognormal:    {n_log:2d} / {len(results)} ({100*n_log/len(results):.1f}%)")
     print("="*120 + "\n")
 
 # ========== SCRIPT PRINCIPAL ==========
@@ -361,9 +359,9 @@ if __name__ == "__main__":
     print("ANÁLISIS DE DISTRIBUCIONES - TIEMPOS ENTRE CONTACTOS")
     print("="*80 + "\n")
 
-    data_dir = "output\\study1\\data"
-    times_dir = "data\\times"
-    output_dir = "output\\study2\\garphs"
+    data_dir = "output/study1/data"
+    times_dir = "data/times"
+    output_dir = "output/study2/graphs"
 
     try:
         # 1. Cargar datos
