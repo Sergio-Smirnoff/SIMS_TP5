@@ -33,6 +33,13 @@
 \setbeamercolor{subsection in sidebar shaded}{}    % subsecciones inactivas
 
 % Topbar (headline con palettes)
+\setbeamertemplate{footline}{
+  \hfill
+  \usebeamercolor[fg]{page number in head/foot}
+  \usebeamerfont{page number in head/foot}
+  \insertframenumber\,/\,\inserttotalframenumber
+  \kern1em\vskip2pt
+}
 
 \begin{document}
 
@@ -220,9 +227,6 @@
   \subsubsection{Animaciones}
   \begin{frame}{Animaciones}
 
-  \end{frame}
-  \begin{frame}{Animaciones}
-
     \begin{columns}
       \begin{column}{0.5\textwidth}
         \medium {N = 72}
@@ -327,8 +331,6 @@
 
   \subsubsection{Animaciones}
   \begin{frame}{Animaciones}
-  \end{frame}
-  \begin{frame}{Animaciones}
     \begin{columns}
       \begin{column}{0.5\textwidth}
         \medium {N = 69}
@@ -431,16 +433,14 @@
 
   \subsubsection{Animaciones}
   \begin{frame}{Animaciones}
-  \end{frame}
-  \begin{frame}{Animaciones}
     \begin{columns}
       \begin{column}{0.5\textwidth}
-        \medium {N = 72}
+        \medium {N = 189}
         \includegraphics[width=1\linewidth]{imagenl8/ani_N189_L8.png}
         \url {https://www.youtube.com/watch?v=JMb-PDV1A3w}
       \end{column}
       \begin{column}{0.5\textwidth}
-        \medium {N = 220}
+        \medium {N = 389}
         \includegraphics[width=1\linewidth]{imagenl8/ani_N389_L8.png}
         \url {https://www.youtube.com/watch?v=1X6egGP7IyQ}
       \end{column}
@@ -533,60 +533,26 @@
   \end{frame}
 
   \subsection{Conclusiones}
-  \begin{frame}{Conclusiones}
-    \Large {Estudio 1:}
+  \begin{frame}{Estudio 1}
     \begin{itemize}
-      \item $ \phi \sim 0.25 $ es el valor óptimo para obtener la mayor cantidad de contactos.
+      \item $ \phi \sim 0.25 $ es el valor óptimo para obtener la mayor cantidad de contactos.$ \phi \sim 0.35 $ para $ L = 8.0 $. 
       \vspace{0.3cm}
-      \item El Scanning Rate está en su mayor punto para densidades intermedias.
+      \item El Scanning Rate está en su mayor punto para densidades intermedias movido hacia bajas.
       \vspace{0.3cm}
       \item Una mayor velocidad deseada no afecta significativamente el Scanning Rate.
       \vspace{0.3cm}
-      \item Un mayor tamaño del sistema manteniendo r constante, desplaza el pico hacia una mayor densidad.
+      \item Un mayor tamaño del sistema manteniendo r en el mismo intervalo, desplaza el pico hacia una mayor densidad.
     \end{itemize}
   \end{frame}
-  \begin{frame}{Conclusiones}
-    \Large {Estudio 2:}
+  \begin{frame}{Estudio 2}
     \begin{itemize}
-      \item Algunos casos presentan un ajuste al modelo de Ley de Potencias.
+      \item Algunos casos presentan un ajuste al modelo de Ley de Potencias y otros a una distribución Exponencial.
       \vspace{0.3cm}
-      \item La mayoría de las configuraciones se ajustan mejor a una distribucion Exponencial.
+      \item No se puede establecer una distribución universal para los tiempos de contacto, varía acorde al área cubierta.
       \vspace{0.3cm}
       \item Las mismas conclusiones se obtienen variando la velocidad deseada y el tamaño del sistema.
     \end{itemize}
   \end{frame}
-  % \subsection{Conclusiones V 1.7 y L 8.0}
-  % \begin{frame}{Conclusiones}
-  %   \Large {Estudio 1:}
-  %   \begin{itemize}
-  %     \item El Scanning Rate aumenta con la densidad de peatones.
-  %     \vspace{0.3cm}
-  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
-  %   \end{itemize}
-  %   \Large {Estudio 2:}
-  %   \begin{itemize}
-  %     \item El aumento de la velocidad deseada incrementa el Scanning Rate.
-  %     \vspace{0.3cm}
-  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
-  %   \end{itemize}
-  % \end{frame}
-  % \subsection{Conclusiones V 2.5 y L 6.0}
-  % \begin{frame}{Conclusiones}
-  %   \Large {Estudio 1:}
-  %   \begin{itemize}
-  %     \item El Scanning Rate aumenta con la densidad de peatones.
-  %     \vspace{0.3cm}
-  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
-  %   \end{itemize}
-  %   \Large {Estudio 2:}
-  %   \begin{itemize}
-  %     \item El aumento de la velocidad deseada incrementa el Scanning Rate.
-  %     \vspace{0.3cm}
-  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
-  %   \end{itemize}
-  % \end{frame}
-
-
 
 % Cierre
   \begin{frame}
