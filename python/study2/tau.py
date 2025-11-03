@@ -197,8 +197,8 @@ def plot_individual_distributions(results, output_dir):
         
         #ax.set_title(title, fontsize=13, fontweight='bold', pad=15)
         ax.legend(loc='best', fontsize=10, framealpha=0.95)
-        ax.set_xlabel('τ (s)', fontsize=12, fontweight='bold')
-        ax.set_ylabel('P(X ≥ τ)', fontsize=12, fontweight='bold')
+        ax.set_xlabel('τ (s)', fontsize=20)
+        ax.set_ylabel('P(X ≥ τ)', fontsize=20)
         ax.grid(True, alpha=0.3, linestyle='--')
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -237,8 +237,8 @@ def plot_parameters_vs_phi(results, output_dir):
         ax.axhline(y=2, color='gray', linestyle='--', alpha=0.5, linewidth=1.5, label='α = 2')
         ax.axhline(y=3, color='gray', linestyle=':', alpha=0.5, linewidth=1.5, label='α = 3')
         
-        ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=13, fontweight='bold')
-        ax.set_ylabel('Exponente α', fontsize=13, fontweight='bold')
+        ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=20)
+        ax.set_ylabel('Exponente α', fontsize=20)
         #ax.set_title('Exponente α de Power Law vs Densidad\n(Solo configuraciones donde Power Law es mejor)', 
                     #fontsize=14, fontweight='bold', pad=15)
         ax.grid(True, alpha=0.3, linestyle='--')
@@ -264,8 +264,8 @@ def plot_parameters_vs_phi(results, output_dir):
                markeredgecolor='darkblue', markeredgewidth=2,
                label='Exponencial')
         
-        ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=13, fontweight='bold')
-        ax.set_ylabel('Parámetro λ', fontsize=13, fontweight='bold')
+        ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=20)
+        ax.set_ylabel('Parámetro λ', fontsize=20)
         #ax.set_title('Parámetro λ de Exponencial vs Densidad\n(Solo configuraciones donde Exponencial es mejor)', 
                     #fontsize=14, fontweight='bold', pad=15)
         ax.grid(True, alpha=0.3, linestyle='--')
@@ -306,8 +306,8 @@ def plot_parameters_vs_phi(results, output_dir):
                markeredgecolor='darkgreen', markeredgewidth=2,
                label=f'Lognormal μ (n={len(log_results)})')
     
-    ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Parámetro característico', fontsize=13, fontweight='bold')
+    ax.set_xlabel('Fracción de área ocupada (φ)', fontsize=20)
+    ax.set_ylabel('Parámetro característico', fontsize=20)
     #ax.set_title('Distribuciones Mejor Ajustadas vs Densidad\n(Clasificación según test de likelihood ratio)', 
                 #fontsize=14, fontweight='bold', pad=15)
     ax.grid(True, alpha=0.3, linestyle='--')
