@@ -59,7 +59,7 @@
   \end{frame}
 
   \subsection{Modelo Matemático}
-  \begin{frame}{Modelo Matemático}
+  \begin{frame}{Social Force Model}
     \begin{itemize}
       \item Ecuación de Movimiento:
       \vspace{0.2cm}
@@ -67,12 +67,19 @@
       \vspace{0.5cm}
       \item Fuerza de Interacción:
       \vspace{0.1cm}
-      \\\(\mathbf{f}_{ij}=\textit{k}_ng(r_{ij}-d_{ij})\mathbf{n}_{ij}+\textit{k}_tg(r_{ij}-d_{ij})\Delta \textit{v}^t_{ji}\mathbf{t}_{ij}\)
-      \vspace{0.2cm}
-      \\donde \( g(x)=\begin{cases}
-                        0 & d_{ij} \ge r_{ij} \\
-                        x & d_{ij} < r_{ij}
-      \end{cases}\)
+      \begin{columns}
+        \begin{column}{0.6\textwidth}
+            \\\(\mathbf{f}_{ij}=\textit{k}_ng(r_{ij}-d_{ij})\mathbf{n}_{ij}+\textit{k}_tg(r_{ij}-d_{ij})\Delta \textit{v}^t_{ji}\mathbf{t}_{ij}\)
+            \vspace{0.2cm}
+            \\donde \( g(x)=\begin{cases}
+                              0 & d_{ij} \ge r_{ij} \\
+                              x & d_{ij} < r_{ij}
+              \end{cases}\)
+        \end{column}
+        \begin{column}{0.4\textwidth}
+          \includegraphics[width=0.3\linewidth]{imagen/interaction.png}
+        \end{column}
+      \end{columns}
       \vspace{0.5cm}
       \item Fuerza Autopropulsora:
       \vspace{0.2cm}
@@ -106,7 +113,7 @@
           \item Peaton
           \item Simulation
           \item CellIndexMethod
-          \item Integrator
+          \item Integrator: Beeman
         \end{itemize}
       \end{column}
 
@@ -146,18 +153,22 @@
         \begin{itemize}
           \item \(L=6.0m\)
           \vspace{0.2cm}
-          \item \(N\in[10,220]\)
-          \vspace{0.2cm}
           \item \(v^0=1.7\frac{m}{s}\)
           \vspace{0.2cm}
-          \item \(dt=0.0001s\)
+          \item \(dt=0.0001\ s\)
           \vspace{0.2cm}
-          \item \(\tau=0.5s\)(tiempo característico)
+          \item t característico \(=0.5\ s\)
           \vspace{0.2cm}
           \item \(\textit{k}_n=1.2\cdot10^5\frac{kg}{s^2}\)
           \vspace{0.2cm}
           \item \(\textit{k}_t=2.4\cdot10^5\frac{kg}{ms}\)
         \end{itemize}
+        \vspace{0.5cm}
+        \medium {Input:}
+        \begin{itemize}
+          \item \(\phi=\frac{\sum^N_i{\pi \cdot r^2_i}}{L^2}\), $N\in[10,220]$
+        \end{itemize}
+
       \end{column}
 
       \begin{column}{0.6\textwidth}
@@ -174,8 +185,6 @@
   \subsection{Definición de Observables}
   \begin{frame}{Definición de Observables}
     \begin{itemize}
-      \item \(\phi=\frac{\sum^N_i{\pi \cdot r^2_i}}{L^2}\)
-      \vspace{0.5cm}
       \item \(Q_{\text{prom}} = \langle Q \rangle_{10\,\text{corridas}} \pm \sigma(Q)\)
       \vspace{0.2cm}
       \\\(Q=\frac{dN(t)}{dt}\)
@@ -187,20 +196,22 @@
       \vspace{0.1cm}
       \\ \(\bm{\tau}_i=t_{i+1}-t_i\)
       % NUEVO ITEM AJUSTE DE ALPHA EXPLICACIÓN BREVE
+      \vspace{0.2cm}
+      \item $ \alpha $ y $ \lambda $: parámetros Ley de Potencias y Exponencial respectivamente.
     \end{itemize}
   \end{frame}
 
   % ------------------ Resultados Base ------------------
   \section{Resultados}
   
-  \subsection{Resultados Base}
+  \subsection{Resultados}
   \begin{frame}
     \centering
     \colorbox{green!20!gray!30}{%
       \begin{minipage}{0.85\textwidth}
         \centering
         \vspace{0.5cm}
-        {\Large\ Resultados Base}
+        {\Large\ Resultados}
         \vspace{0.5cm}
       \end{minipage}
     }
@@ -208,6 +219,24 @@
 
   \subsubsection{Animaciones}
   \begin{frame}{Animaciones}
+
+  \end{frame}
+  \begin{frame}{Animaciones}
+
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \medium {N = 72}
+        \includegraphics[width=1\linewidth]{imagen/ani_N72_L6.png}
+        \url {https://www.youtube.com/watch?v=2i7REk3KfTc&t=36s}
+      \end{column}
+
+      \begin{column}{0.5\textwidth}
+        \medium {N = 220}
+        \includegraphics[width=1\linewidth]{imagen/ani_N220_L6.png}
+        \url {https://www.youtube.com/watch?v=yL0JS209mKc&t=66s}
+      \end{column}
+    \end{columns}
+
   \end{frame}
 
   \subsubsection{Contactos Únicos con Agente Fijo}
@@ -228,47 +257,56 @@
     \end{figure}
   \end{frame}
 
-  \subsubsection{Intervalo de Tiempo entre Contactos}
+  \subsubsection{Aproximaciones}
 
-  \begin{frame}{Aproximación Power Law}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagen/distribution_N63.png}
-      \label{fig:placeholder}
-    \end{figure}
+  \begin{frame}{Aproximaciones}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Aproximación Power Law}
+        \begin{figure}
+          \small{N=39}
+          \includegraphics[width=\linewidth]{imagen/distribution_N39.png}
+          \label{fig:dist_N39}
+        \end{figure}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Aproximación Exponencial}
+        \begin{figure}
+          \small{N=54}
+          \includegraphics[width=\linewidth]{imagen/distribution_N54.png}
+          \label{fig:dist_N54}
+        \end{figure}
+      \end{column}
+    \end{columns}
   \end{frame}
 
-  \begin{frame}{Aproximación Exponencial}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagen/distribution_N72.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Aproximación Logarítmica}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagen/distribution_N219.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
 
   \subsubsection{Exponentes Aproximaciones}
-  \begin{frame}{Exponente de la Ley de Potencias}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagen/exppowerlaw.jpeg}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Exponente de Exponencial}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagen/expvsdens.jpeg}
-      \label{fig:placeholder}
-    \end{figure}
+  \begin{frame}{Exponentes: Ley de Potencias y Exponencial}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Exponente de la Ley de Potencias}
+        \vspace{0.2cm}
+        \begin{figure}
+          \centering
+          \includegraphics[width=\linewidth]{imagen/alpha_vs_phi.png}
+          \label{fig:alpha_vs_phi}
+        \end{figure}  
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Exponente de Exponencial}
+        \vspace{0.2cm}
+        \begin{figure}
+          \centering
+          \includegraphics[width=\linewidth]{imagen/lambda_vs_phi.png}
+          \label{fig:lambda_vs_phi}
+        \end{figure}
+      \end{column}
+    \end{columns}
   \end{frame}
 
 
@@ -290,6 +328,21 @@
   \subsubsection{Animaciones}
   \begin{frame}{Animaciones}
   \end{frame}
+  \begin{frame}{Animaciones}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \medium {N = 69}
+        \includegraphics[width=1\linewidth]{imagenv25/ani_N69_L6.png}
+        \url {https://www.youtube.com/watch?v=zeKmTOo-9jc}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \medium {N = 219}
+        \includegraphics[width=1\linewidth]{imagenv25/ani_N219_L6.png}
+        \url {https://www.youtube.com/watch?v=DpU_IK-XHEc}
+      \end{column}
+    \end{columns}
+  \end{frame}
+
 
   \subsubsection{Contactos Únicos con Agente Fijo}
   \begin{frame}{Contactos Únicos con Agente Fijo}
@@ -309,47 +362,56 @@
     \end{figure}
   \end{frame}
 
-  \subsubsection{Intervalo de Tiempo entre Contactos}
+  \subsubsection{Aproximaciones}
 
-  \begin{frame}{Aproximación Power Law}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenv25/distribution_N149.png}
-      \label{fig:placeholder}
-    \end{figure}
+  \begin{frame}{Aproximaciones}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \medium{Aproximación Power Law}
+        \begin{figure}
+          \centering
+          \small{N=39}
+          \includegraphics[width=1\linewidth]{imagenv25/distribution_N39.png}
+          \label{fig:dist_N39}
+        \end{figure}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \medium{Aproximación Exponencial}
+        \begin{figure}
+          \centering
+          \small{N=219}
+          \includegraphics[width=1\linewidth]{imagenv25/distribution_N219.png}
+          \label{fig:dist_N219}
+        \end{figure}
+      \end{column}
+    \end{columns}
   \end{frame}
 
-  \begin{frame}{Aproximación Exponencial}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenv25/distribution_N99.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Aproximación Logarítmica}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenv25/distribution_N89.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
 
   \subsubsection{Exponentes Aproximaciones}
-  \begin{frame}{Exponente de la Ley de Potencias}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenv25/alpha_vs_phi.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Exponente de Exponencial}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenv25/lambda_vs_phi.png}
-      \label{fig:placeholder}
-    \end{figure}
+  \begin{frame}{Exponentes: Ley de Potencias y Exponencial}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Exponente de la Ley de Potencias}
+        \vspace{0.2cm}
+        \begin{figure}
+          \centering
+          \includegraphics[width=\linewidth]{imagenv25/alpha_vs_phi.png}
+          \label{fig:alpha_vs_phi}
+        \end{figure}  
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Exponente de Exponencial}
+        \vspace{0.2cm}
+        \begin{figure}
+          \centering
+          \includegraphics[width=\linewidth]{imagenv25/lambda_vs_phi.png}
+          \label{fig:lambda_vs_phi}
+        \end{figure}
+      \end{column}
+    \end{columns}
   \end{frame}
   
   % ------------------ Resultados L = 8 ------------------
@@ -370,6 +432,20 @@
   \subsubsection{Animaciones}
   \begin{frame}{Animaciones}
   \end{frame}
+  \begin{frame}{Animaciones}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \medium {N = 72}
+        \includegraphics[width=1\linewidth]{imagenl8/ani_N189_L8.png}
+        \url {https://www.youtube.com/watch?v=JMb-PDV1A3w}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \medium {N = 220}
+        \includegraphics[width=1\linewidth]{imagenl8/ani_N389_L8.png}
+        \url {https://www.youtube.com/watch?v=1X6egGP7IyQ}
+      \end{column}
+    \end{columns}
+  \end{frame}
 
   \subsubsection{Contactos Únicos con Agente Fijo}
   \begin{frame}{Contactos Únicos con Agente Fijo}
@@ -378,6 +454,7 @@
       \includegraphics[width=1\linewidth]{imagenl8/accumulated_contacts_N_9_189_389.png}
       \label{fig:placeholder}
     \end{figure}
+    \small {para \(L=8.0m\), $N \in $[10, 390]}
   \end{frame}
 
   \subsubsection{Scanning Rate}
@@ -389,47 +466,55 @@
     \end{figure}
   \end{frame}
 
-  \subsubsection{Intervalo de Tiempo entre Contactos}
+  \subsubsection{Aproximaciones}
 
-  \begin{frame}{Aproximación Power Law}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenl8/distribution_N59.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Aproximación Exponencial}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenl8/distribution_N259.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Aproximación Logarítmica}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenl8/distribution_N69.png}
-      \label{fig:placeholder}
-    \end{figure}
+  \begin{frame}{Aproximaciones}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \medium {Aproximación Power Law}
+        \begin{figure}
+          \centering
+          \small{N=119}
+          \includegraphics[width=1\linewidth]{imagenl8/distribution_N119.png}
+          \label{fig:placeholder}
+        \end{figure}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \medium {Aproximación Exponencial}
+        \begin{figure}
+          \centering
+          \small{N=299}
+          \includegraphics[width=1\linewidth]{imagenl8/distribution_N299.png}
+          \label{fig:placeholder}
+        \end{figure}
+      \end{column}
+    \end{columns}
   \end{frame}
 
   \subsubsection{Exponentes Aproximaciones}
-  \begin{frame}{Exponente de la Ley de Potencias}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenl8/alpha_vs_phi.png}
-      \label{fig:placeholder}
-    \end{figure}
-  \end{frame}
-
-  \begin{frame}{Exponente de Exponencial}
-    \begin{figure}
-      \centering
-      \includegraphics[width=1\linewidth]{imagenl8/lambda_vs_phi.png}
-      \label{fig:placeholder}
-    \end{figure}
+  \begin{frame}{Exponentes}
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Exponente de la Ley de Potencias}
+        \vspace{0.2cm}
+        \begin{figure}
+          \centering
+          \includegraphics[width=\linewidth]{imagenl8/alpha_vs_phi.png}
+          \label{fig:alpha_vs_phi}
+        \end{figure}  
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \centering
+        \medium{Exponente de Exponencial}
+        \vspace{0.2cm}
+        \begin{figure}
+          \centering
+          \includegraphics[width=\linewidth]{imagenl8/lambda_vs_phi.png}
+          \label{fig:lambda_vs_phi}
+        \end{figure}
+      \end{column}
+    \end{columns}
   \end{frame}
 
 
@@ -447,9 +532,59 @@
     }
   \end{frame}
 
+  \subsection{Conclusiones}
   \begin{frame}{Conclusiones}
-
+    \Large {Estudio 1:}
+    \begin{itemize}
+      \item $ \phi \sim 0.25 $ es el valor óptimo para obtener la mayor cantidad de contactos.
+      \vspace{0.3cm}
+      \item El Scanning Rate está en su mayor punto para densidades intermedias.
+      \vspace{0.3cm}
+      \item Una mayor velocidad deseada no afecta significativamente el Scanning Rate.
+      \vspace{0.3cm}
+      \item Un mayor tamaño del sistema manteniendo r constante, desplaza el pico hacia una mayor densidad.
+    \end{itemize}
   \end{frame}
+  \begin{frame}{Conclusiones}
+    \Large {Estudio 2:}
+    \begin{itemize}
+      \item Algunos casos presentan un ajuste al modelo de Ley de Potencias.
+      \vspace{0.3cm}
+      \item La mayoría de las configuraciones se ajustan mejor a una distribucion Exponencial.
+      \vspace{0.3cm}
+      \item Los mismos conclusiones se obtienen variando la velocidad deseada y el tamaño del sistema.
+    \end{itemize}
+  \end{frame}
+  % \subsection{Conclusiones V 1.7 y L 8.0}
+  % \begin{frame}{Conclusiones}
+  %   \Large {Estudio 1:}
+  %   \begin{itemize}
+  %     \item El Scanning Rate aumenta con la densidad de peatones.
+  %     \vspace{0.3cm}
+  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
+  %   \end{itemize}
+  %   \Large {Estudio 2:}
+  %   \begin{itemize}
+  %     \item El aumento de la velocidad deseada incrementa el Scanning Rate.
+  %     \vspace{0.3cm}
+  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
+  %   \end{itemize}
+  % \end{frame}
+  % \subsection{Conclusiones V 2.5 y L 6.0}
+  % \begin{frame}{Conclusiones}
+  %   \Large {Estudio 1:}
+  %   \begin{itemize}
+  %     \item El Scanning Rate aumenta con la densidad de peatones.
+  %     \vspace{0.3cm}
+  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
+  %   \end{itemize}
+  %   \Large {Estudio 2:}
+  %   \begin{itemize}
+  %     \item El aumento de la velocidad deseada incrementa el Scanning Rate.
+  %     \vspace{0.3cm}
+  %     \item El ajuste por Ley de Potencias es mejor para bajas densidades, mientras que
+  %   \end{itemize}
+  % \end{frame}
 
 
 
